@@ -68,7 +68,7 @@ namespace HtmlToOpenXml
         /// </summary>
         /// <param name="begin">The characters at the beginning of a quote.</param>
         /// <param name="end">The characters at the end of a quote.</param>
-        public QuoteChars(string begin, string end)
+        public QuoteChars(string begin, string end) : this()
         {
             Prefix = begin;
             Suffix = end;

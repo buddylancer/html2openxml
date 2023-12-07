@@ -35,7 +35,7 @@ namespace HtmlToOpenXml.Tests
         {
             var stream = assembly.GetManifestResourceStream(assembly.GetName().Name + "." + resourceName);
             if (stream == null)
-                throw new MissingManifestResourceException($"Requested resource `{resourceName}` was not found in the assembly `{assembly}`.");
+                throw new MissingManifestResourceException("Requested resource `{resourceName}` was not found in the assembly `{assembly}`.");
 
             return stream;
         }

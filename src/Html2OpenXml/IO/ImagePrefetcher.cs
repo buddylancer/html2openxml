@@ -78,7 +78,7 @@ namespace HtmlToOpenXml.IO
             try
             {
                 response = resourceLoader.FetchAsync(imageUri, CancellationToken.None).Result;
-                if (response?.Content == null)
+                if (response.Content == null)
                     return null;
             }
             catch (Exception exc)
@@ -92,7 +92,7 @@ namespace HtmlToOpenXml.IO
             using (response)
             {
                 // For requested url with no filename, we need to read the media mime type if provided
-                response.Headers.TryGetValue("Content-Type", out string mime);
+                string mime; response.Headers.TryGetValue("Content-Type", out mime);
                 if (!TryInspectMimeType(mime, out type)
                     && !TryGuessTypeFromUri(imageUri, out type)
                     && !TryGuessTypeFromStream(response.Content, out type))
@@ -119,10 +119,11 @@ namespace HtmlToOpenXml.IO
         /// </summary>
         private HtmlImageInfo ReadDataUri(string src)
         {
-            if (DataUri.TryCreate(src, out DataUri dataUri))
+			DataUri dataUri;
+            if (DataUri.TryCreate(src, out dataUri))
             {
                 Size size;
-                knownContentType.TryGetValue(dataUri.Mime, out ImagePartType type);
+                ImagePartType type; knownContentType.TryGetValue(dataUri.Mime, out type);
                 var ipart = mainPart.AddImagePart(type);
                 using (var outputStream = ipart.GetStream(FileMode.Create))
                 {
@@ -176,7 +177,7 @@ namespace HtmlToOpenXml.IO
                 knownContentType.TryGetValue(contentType, out type))
                 return true;
 
-            type = default;
+            type = default(ImagePartType);
             return false;
         }
 
@@ -201,7 +202,8 @@ namespace HtmlToOpenXml.IO
         /// </summary>
         private static bool TryGuessTypeFromStream(Stream stream, out ImagePartType type)
         {
-            if (ImageHeader.TryDetectFileType(stream, out ImageHeader.FileType guessType))
+			ImageHeader.FileType guessType;
+            if (ImageHeader.TryDetectFileType(stream, out guessType))
             {
                 switch (guessType)
                 {

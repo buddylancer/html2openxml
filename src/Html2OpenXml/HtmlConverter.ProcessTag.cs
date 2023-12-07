@@ -279,7 +279,7 @@ namespace HtmlToOpenXml
 			// Check if the line starts with a number format (1., 1.1., 1.1.1.)
 			// If it does, make sure we make the heading a numbered item
 			OpenXmlElement firstElement = elements.FirstOrDefault();
-			Match regexMatch = Regex.Match(firstElement?.InnerText ?? string.Empty, @"(?m)^(\d+\.)*\s");
+			Match regexMatch = Regex.Match(firstElement.InnerText ?? string.Empty, @"(?m)^(\d+\.)*\s");
 
 			// Make sure we only grab the heading if it starts with a number
 			if (regexMatch.Groups.Count > 1 && regexMatch.Groups[1].Captures.Count > 0)
@@ -1384,7 +1384,7 @@ namespace HtmlToOpenXml
 				foreach (TableCell cell in row.Elements<TableCell>())
 				{
 					// If that column contains some span, we need to count them also
-					int count = cell.TableCellProperties?.GridSpan?.Val ?? 1;
+					int count = cell.TableCellProperties.GridSpan.Val ?? 1;
 					for (int i=0; i<count; i++) {
 						grid.Append(new GridColumn());
 					}
@@ -1459,7 +1459,7 @@ namespace HtmlToOpenXml
                     int columnIndex = 0;
                     while (columnIndex < tspan.CellOrigin.Column)
                     {
-                        columnIndex += cell.TableCellProperties?.GridSpan?.Val ?? 1;
+                        columnIndex += cell.TableCellProperties.GridSpan.Val ?? 1;
                     }
                     //while ((cell = cell.NextSibling<TableCell>()) != null);
 

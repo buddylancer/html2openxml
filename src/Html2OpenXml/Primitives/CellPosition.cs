@@ -24,7 +24,7 @@ namespace HtmlToOpenXml
         /// Initializes a new instance of the <see cref='HtmlToOpenXml.CellPosition'/> class from
         /// the specified location.
         /// </summary>
-        public CellPosition(int row, int column)
+        public CellPosition(int row, int column) : this()
         {
             this.Row = row;
             this.Column = column;

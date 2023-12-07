@@ -131,7 +131,7 @@ namespace HtmlToOpenXml
 				{
 					if (!EnsureKnownStyle(name, out style))
 					{
-						StyleMissing?.Invoke(this, new StyleEventArgs(name, mainPart, styleType));
+						StyleMissing.Invoke(this, new StyleEventArgs(name, mainPart, styleType));
 						return name;
 					}
 				}

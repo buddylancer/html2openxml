@@ -33,8 +33,8 @@ namespace HtmlToOpenXml.Tests
         [TearDown]
         public void Close ()
         {
-            package?.Dispose();
-            generatedDocument?.Dispose();
+            package.Dispose();
+            generatedDocument.Dispose();
         }
     }
 }

@@ -497,7 +497,7 @@ namespace HtmlToOpenXml
 			get { return this.levelDepth; }
 		}
 
-        public string[] GetCurrentListClasses => listHtmlElementClasses.Peek();
+		public string[] GetCurrentListClasses { get { return listHtmlElementClasses.Peek(); } }
 
 		/// <summary>
 		/// Gets the ID of the current list instance.

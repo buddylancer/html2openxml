@@ -65,7 +65,9 @@ namespace HtmlToOpenXml
         public HtmlConverter(MainDocumentPart mainPart, IWebRequest webRequester = null)
         {
             this.knownTags = InitKnownTags();
-            this.mainPart = mainPart ?? throw new ArgumentNullException("mainPart");
+			if (mainPart == null)
+				throw new ArgumentNullException("mainPart");
+            this.mainPart = mainPart;
             this.htmlStyles = new HtmlDocumentStyle(mainPart);
             this.webRequester = webRequester ?? new DefaultWebRequest();
         }
@@ -807,8 +809,9 @@ namespace HtmlToOpenXml
         /// <summary>
         /// Gets or sets how the &lt;img&gt; tag should be handled.
         /// </summary>
-        [Obsolete("Provide a IWebRequest implementation or use DefaultWebRequest")]
-        public ImageProcessing ImageProcessing { get; set; } = ImageProcessing.AutomaticDownload;
+		[Obsolete("Provide a IWebRequest implementation or use DefaultWebRequest")]
+		public ImageProcessing ImageProcessing { get { return mImageProcessing; } set { mImageProcessing = value; } }
+        ImageProcessing mImageProcessing = ImageProcessing.AutomaticDownload;
 
         /// <summary>
         /// Gets or sets the base Uri used to automaticaly resolve relative images 
@@ -817,7 +820,7 @@ namespace HtmlToOpenXml
         [Obsolete("Provide a IWebRequest implementation or use DefaultWebRequest.BaseImageUrl")]
         public Uri BaseImageUrl
         {
-            get { return (webRequester as DefaultWebRequest)?.BaseImageUrl; }
+            get { return (webRequester as DefaultWebRequest).BaseImageUrl; }
             set
             {
                 if (value != null)
@@ -830,8 +833,11 @@ namespace HtmlToOpenXml
                     if (value.IsFile && value.LocalPath[value.LocalPath.Length - 1] != '/')
                         value = new Uri(value.OriginalString + '/');
                 }
-                if (webRequester is DefaultWebRequest wr)
-                    wr.BaseImageUrl = value;
+				if (webRequester is DefaultWebRequest /*wr*/) //TODO
+				{
+					DefaultWebRequest wr = default(DefaultWebRequest);
+					wr.BaseImageUrl = value;
+				}
             }
         }
 

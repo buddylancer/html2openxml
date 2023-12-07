@@ -105,7 +105,7 @@ namespace HtmlToOpenXml
 				catch (ArgumentException exc)
 				{
                     // lang not valid, ignore it
-                    if (Logging.On) Logging.PrintError($"lang attribute {attrValue} not recognized: " + exc.Message, exc);
+                    if (Logging.On) Logging.PrintError("lang attribute {attrValue} not recognized: " + exc.Message, exc);
 				}
 			}
 

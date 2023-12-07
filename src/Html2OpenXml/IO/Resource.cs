@@ -29,16 +29,18 @@ namespace HtmlToOpenXml.IO
         /// <summary>
         /// Gets the headers that have been send with the response.
         /// </summary>
-        public IDictionary<string, string> Headers { get; private set; } = new Dictionary<string, string>();
+		public IDictionary<string, string> Headers { get { return mHeaders; } private set { mHeaders = value; } }
+        private IDictionary<string, string> mHeaders = new Dictionary<string, string>();
 
         /// <summary>
         /// Gets the content that has been send with the response.
         /// </summary>
-        public Stream Content { get; set; } = Stream.Null;
+        public Stream Content { get { return mContent; } set { mContent = value; } }
+        private Stream mContent = Stream.Null;
 
         void IDisposable.Dispose()
         {
-            Content?.Dispose();
+            Content.Dispose();
             Headers.Clear();
         }
     }

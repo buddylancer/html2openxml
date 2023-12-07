@@ -49,9 +49,9 @@ namespace HtmlToOpenXml.Tests
             Assert.IsNotNull(run);
             var img = run.GetFirstChild<Drawing>();
             Assert.IsNotNull(img);
-            Assert.IsNotNull(img.Inline?.Graphic?.GraphicData);
+            Assert.IsNotNull(img.Inline.Graphic.GraphicData);
             var pic = img.Inline.Graphic.GraphicData.GetFirstChild<pic.Picture>();
-            Assert.IsNotNull(pic?.BlipFill?.Blip?.Embed);
+            Assert.IsNotNull(pic.BlipFill.Blip.Embed);
 
             var imagePartId = pic.BlipFill.Blip.Embed.Value;
             var part = mainPart.GetPartById(imagePartId);

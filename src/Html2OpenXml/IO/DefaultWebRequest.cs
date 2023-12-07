@@ -124,8 +124,8 @@ namespace HtmlToOpenXml.IO
         }
 
         /// <inheritdoc/>
-        public virtual bool SupportsProtocol(string protocol)
-            => SupportedProtocols.Contains(protocol);
+		public virtual bool SupportsProtocol(string protocol)
+			{ return SupportedProtocols.Contains(protocol); }
 
         /// <summary>
         /// Gets or sets the base Uri used to automaticaly resolve relative images 

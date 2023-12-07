@@ -64,7 +64,8 @@ namespace HtmlToOpenXml
         {
             if (elements.Count == 0) return;
 
-            if (!tags.TryGetValue(name, out Stack<TagsAtSameLevel> enqueuedTags))
+			Stack<TagsAtSameLevel> enqueuedTags;
+            if (!tags.TryGetValue(name, out enqueuedTags))
             {
                 tags.Add(name, enqueuedTags = new Stack<TagsAtSameLevel>());
             }
@@ -79,7 +80,8 @@ namespace HtmlToOpenXml
         /// <param name="elements">The Run properties to apply to the next build run until the tag is popped out.</param>
         public void BeginTag(string name, params OpenXmlElement[] elements)
         {
-            if (!tags.TryGetValue(name, out Stack<TagsAtSameLevel> enqueuedTags))
+			Stack<TagsAtSameLevel> enqueuedTags;
+            if (!tags.TryGetValue(name, out enqueuedTags))
             {
                 tags.Add(name, enqueuedTags = new Stack<TagsAtSameLevel>());
             }
@@ -98,7 +100,8 @@ namespace HtmlToOpenXml
         /// <param name="elements">The properties to apply to the next build run until the tag is popped out.</param>
         public void MergeTag(string name, List<OpenXmlElement> elements)
         {
-            if (!tags.TryGetValue(name, out Stack<TagsAtSameLevel> enqueuedTags))
+			Stack<TagsAtSameLevel> enqueuedTags;
+            if (!tags.TryGetValue(name, out enqueuedTags))
             {
                 BeginTag(name, elements.ToArray());
             }
@@ -136,7 +139,8 @@ namespace HtmlToOpenXml
         /// <param name="name">The name of the tag.</param>
         public virtual void EndTag(string name)
         {
-            if (tags.TryGetValue(name, out Stack<TagsAtSameLevel> enqueuedTags))
+			Stack<TagsAtSameLevel> enqueuedTags;
+            if (tags.TryGetValue(name, out enqueuedTags))
             {
                 enqueuedTags.Pop();
                 if (enqueuedTags.Count == 0) tags.Remove(name);

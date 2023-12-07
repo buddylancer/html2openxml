@@ -26,7 +26,7 @@ namespace HtmlToOpenXml
         /// Initializes a new instance of the <see cref='HtmlToOpenXml.Size'/> class from
         /// the specified dimensions.
         /// </summary>
-        public Size(int width, int height)
+        public Size(int width, int height) : this()
         {
             this.Width = width;
             this.Height = height;
@@ -35,7 +35,7 @@ namespace HtmlToOpenXml
         /// <summary>
         /// Tests whether this size has zero width and height.
         /// </summary>
-        public bool IsEmpty => Width == 0 && Height == 0;
+		public bool IsEmpty { get { return Width == 0 && Height == 0; } }
 
         /// <summary>
         /// Represents the horizontal component of this size.

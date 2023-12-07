@@ -146,7 +146,7 @@ namespace HtmlToOpenXml
         public static HtmlColor FromArgb(double alpha, byte red, byte green, byte blue)
         {
             if (alpha < 0.0 || alpha > 1.0)
-                throw new ArgumentOutOfRangeException(nameof(alpha), alpha, "Alpha should be comprised between 0.0 and 1.0");
+                throw new ArgumentOutOfRangeException("double", alpha, "Alpha should be comprised between 0.0 and 1.0");
 
             return new HtmlColor() {
                 A = alpha, R = red, G = green, B = blue
@@ -163,16 +163,16 @@ namespace HtmlToOpenXml
         public static HtmlColor FromHsl(double alpha, double hue, double saturation, double luminosity)
         {
             if (alpha < 0.0 || alpha > 1.0)
-                throw new ArgumentOutOfRangeException(nameof(alpha), alpha, "Alpha should be comprised between 0.0 and 1.0");
+				throw new ArgumentOutOfRangeException("double", alpha, "Alpha should be comprised between 0.0 and 1.0");
 
             if (hue < 0 || hue > 360)
-                throw new ArgumentOutOfRangeException(nameof(hue), hue, "Hue should be comprised between 0° and 360°");
+				throw new ArgumentOutOfRangeException("double", hue, "Hue should be comprised between 0° and 360°");
 
             if (saturation < 0 || saturation > 1)
-                throw new ArgumentOutOfRangeException(nameof(saturation), saturation, "Saturation should be comprised between 0.0 and 1.0");
+				throw new ArgumentOutOfRangeException("double", saturation, "Saturation should be comprised between 0.0 and 1.0");
 
             if (luminosity < 0 || luminosity > 1)
-                throw new ArgumentOutOfRangeException(nameof(luminosity), luminosity, "Brightness should be comprised between 0.0 and 1.0");
+				throw new ArgumentOutOfRangeException("double", luminosity, "Brightness should be comprised between 0.0 and 1.0");
 
             if (0 == saturation)
             {
