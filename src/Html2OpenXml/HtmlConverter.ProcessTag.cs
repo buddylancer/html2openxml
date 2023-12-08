@@ -1384,7 +1384,7 @@ namespace HtmlToOpenXml
 				foreach (TableCell cell in row.Elements<TableCell>())
 				{
 					// If that column contains some span, we need to count them also
-					int count = cell.TableCellProperties.GridSpan.Val ?? 1;
+					int count = cell.TableCellProperties.GridSpan != null ? cell.TableCellProperties.GridSpan.Val.Value : 1;
 					for (int i=0; i<count; i++) {
 						grid.Append(new GridColumn());
 					}
