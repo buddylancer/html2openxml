@@ -12,12 +12,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml
 {
-	using TagsAtSameLevel = System.ArraySegment<DocumentFormat.OpenXml.OpenXmlElement>;
+	using TagsAtSameLevel = System.ArraySegment<Ox.OpenXmlElement>;
 
 
 	sealed class ParagraphStyleCollection : OpenXmlStyleCollectionBase
@@ -32,18 +32,18 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Apply all the current Html tag (Paragraph properties) to the specified paragrah.
 		/// </summary>
-		public override void ApplyTags(OpenXmlCompositeElement paragraph)
+		public override void ApplyTags(Ox.OpenXmlCompositeElement paragraph)
 		{
 			if (tags.Count == 0) return;
 
-			ParagraphProperties properties = paragraph.GetFirstChild<ParagraphProperties>();
-			if (properties == null) paragraph.PrependChild<ParagraphProperties>(properties = new ParagraphProperties());
+			OxW.ParagraphProperties properties = paragraph.GetFirstChild<OxW.ParagraphProperties>();
+			if (properties == null) paragraph.PrependChild<OxW.ParagraphProperties>(properties = new OxW.ParagraphProperties());
 
 			var en = tags.GetEnumerator();
 			while (en.MoveNext())
 			{
 				TagsAtSameLevel tagsOfSameLevel = en.Current.Value.Peek();
-				foreach (OpenXmlElement tag in tagsOfSameLevel.Array)
+				foreach (Ox.OpenXmlElement tag in tagsOfSameLevel.Array)
 					properties.AddChild(tag.CloneNode(true));
 			}
 		}
@@ -53,11 +53,11 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Factor method to create a new Paragraph with its default style already defined.
 		/// </summary>
-		public Paragraph NewParagraph()
+		public OxW.Paragraph NewParagraph()
 		{
-			Paragraph p = new Paragraph();
+			OxW.Paragraph p = new OxW.Paragraph();
 			if (this.DefaultParagraphStyle != null)
-				p.InsertInProperties(prop => prop.ParagraphStyleId = new ParagraphStyleId() { Val = this.DefaultParagraphStyle });
+				p.InsertInProperties(prop => prop.ParagraphStyleId = new OxW.ParagraphStyleId() { Val = this.DefaultParagraphStyle });
 			return p;
 		}
 
@@ -70,12 +70,12 @@ namespace HtmlToOpenXml
 		/// number of tags (&lt;p&gt;, &lt;pre&gt;, &lt;div&gt;, &lt;span&gt; and &lt;body&gt;).
 		/// </summary>
 		/// <returns>Returns true if the processing of this tag should generate a new paragraph.</returns>
-		public bool ProcessCommonAttributes(HtmlEnumerator en, IList<OpenXmlElement> styleAttributes)
+		public bool ProcessCommonAttributes(HtmlEnumerator en, IList<Ox.OpenXmlElement> styleAttributes)
 		{
 			if (en.Attributes.Count == 0) return false;
 
 			bool newParagraph = false;
-			List<OpenXmlElement> containerStyleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> containerStyleAttributes = new List<Ox.OpenXmlElement>();
 
 			string attrValue = en.Attributes["lang"];
 			if (attrValue != null && attrValue.Length > 0)
@@ -89,18 +89,18 @@ namespace HtmlToOpenXml
 #endif
                     bool rtl = ci.TextInfo.IsRightToLeft;
 
-					Languages lang = new Languages() { Val = ci.TwoLetterISOLanguageName };
+					OxW.Languages lang = new OxW.Languages() { Val = ci.TwoLetterISOLanguageName };
 					if (rtl)
 					{
 						lang.Bidi = ci.Name;
-						styleAttributes.Add(new Languages() { Bidi = ci.Name });
+						styleAttributes.Add(new OxW.Languages() { Bidi = ci.Name });
 
 						// notify table
-						documentStyle.Tables.BeginTag(en.CurrentTag, new TableJustification() { Val = TableRowAlignmentValues.Right });
+						documentStyle.Tables.BeginTag(en.CurrentTag, new OxW.TableJustification() { Val = OxW.TableRowAlignmentValues.Right });
 					}
 
-					containerStyleAttributes.Add(new ParagraphMarkRunProperties(lang));
-					containerStyleAttributes.Add(new BiDi() { Val = OnOffValue.FromBoolean(rtl) });
+					containerStyleAttributes.Add(new OxW.ParagraphMarkRunProperties(lang));
+					containerStyleAttributes.Add(new OxW.BiDi() { Val = Ox.OnOffValue.FromBoolean(rtl) });
 				}
 				catch (ArgumentException exc)
 				{
@@ -113,10 +113,10 @@ namespace HtmlToOpenXml
 			attrValue = en.StyleAttributes["text-align"];
 			if (attrValue != null && en.CurrentTag != "<font>")
 			{
-				JustificationValues? align = Converter.ToParagraphAlign(attrValue);
+				OxW.JustificationValues? align = Converter.ToParagraphAlign(attrValue);
 				if (align.HasValue)
 				{
-					containerStyleAttributes.Add(new Justification { Val = align });
+					containerStyleAttributes.Add(new OxW.Justification { Val = align });
 				}
 			}
 
@@ -126,12 +126,12 @@ namespace HtmlToOpenXml
 			{
 				if (attrValue.Equals("rtl", StringComparison.OrdinalIgnoreCase))
 				{
-					styleAttributes.Add(new RightToLeftText());
-					containerStyleAttributes.Add(new Justification() { Val = JustificationValues.Right });
+					styleAttributes.Add(new OxW.RightToLeftText());
+					containerStyleAttributes.Add(new OxW.Justification() { Val = OxW.JustificationValues.Right });
 				}
 				else if (attrValue.Equals("ltr", StringComparison.OrdinalIgnoreCase))
 				{
-					containerStyleAttributes.Add(new Justification() { Val = JustificationValues.Left });
+					containerStyleAttributes.Add(new OxW.Justification() { Val = OxW.JustificationValues.Left });
 				}
 			}
 
@@ -141,15 +141,15 @@ namespace HtmlToOpenXml
 				var border = en.StyleAttributes.GetAsBorder("border");
 				if (!border.IsEmpty)
 				{
-					ParagraphBorders borders = new ParagraphBorders();
+					OxW.ParagraphBorders borders = new OxW.ParagraphBorders();
 					if (border.Top.IsValid)
-						borders.TopBorder = new TopBorder() { Val = border.Top.Style, Color = border.Top.Color.ToHexString(), Size = (uint) border.Top.Width.ValueInPx * 4, Space = 1U };
+						borders.TopBorder = new OxW.TopBorder() { Val = border.Top.Style, Color = border.Top.Color.ToHexString(), Size = (uint)border.Top.Width.ValueInPx * 4, Space = 1U };
                     if (border.Left.IsValid)
-						borders.LeftBorder = new LeftBorder() { Val = border.Left.Style, Color = border.Left.Color.ToHexString(), Size = (uint) border.Left.Width.ValueInPx * 4, Space = 1U };
+						borders.LeftBorder = new OxW.LeftBorder() { Val = border.Left.Style, Color = border.Left.Color.ToHexString(), Size = (uint)border.Left.Width.ValueInPx * 4, Space = 1U };
                     if (border.Bottom.IsValid)
-						borders.BottomBorder = new BottomBorder() { Val = border.Bottom.Style, Color = border.Bottom.Color.ToHexString(), Size = (uint) border.Bottom.Width.ValueInPx * 4, Space = 1U };
+						borders.BottomBorder = new OxW.BottomBorder() { Val = border.Bottom.Style, Color = border.Bottom.Color.ToHexString(), Size = (uint)border.Bottom.Width.ValueInPx * 4, Space = 1U };
                     if (border.Right.IsValid)
-						borders.RightBorder = new RightBorder() { Val = border.Right.Style, Color = border.Right.Color.ToHexString(), Size = (uint) border.Right.Width.ValueInPx * 4, Space = 1U };
+						borders.RightBorder = new OxW.RightBorder() { Val = border.Right.Style, Color = border.Right.Color.ToHexString(), Size = (uint)border.Right.Width.ValueInPx * 4, Space = 1U };
 
 					containerStyleAttributes.Add(borders);
 					newParagraph = true;
@@ -175,29 +175,29 @@ namespace HtmlToOpenXml
 			{
 				for (int i = 0; i < classes.Length; i++)
 				{
-					string className = documentStyle.GetStyle(classes[i], StyleValues.Paragraph, ignoreCase: true);
+					string className = documentStyle.GetStyle(classes[i], OxW.StyleValues.Paragraph, ignoreCase: true);
 					if (className != null)
 					{
-						containerStyleAttributes.Add(new ParagraphStyleId() { Val = className });
+						containerStyleAttributes.Add(new OxW.ParagraphStyleId() { Val = className });
 						break;
 					}
 				}
 			}
 
 			Margin margin = en.StyleAttributes.GetAsMargin("margin");
-            Indentation indentation = null;
+			OxW.Indentation indentation = null;
             if (!margin.IsEmpty)
 			{
                 if (margin.Top.IsFixed || margin.Bottom.IsFixed)
 				{
-					SpacingBetweenLines spacing = new SpacingBetweenLines();
+					OxW.SpacingBetweenLines spacing = new OxW.SpacingBetweenLines();
                     if (margin.Top.IsFixed) spacing.Before = margin.Top.ValueInDxa.ToString(CultureInfo.InvariantCulture);
                     if (margin.Bottom.IsFixed) spacing.After = margin.Bottom.ValueInDxa.ToString(CultureInfo.InvariantCulture);
 					containerStyleAttributes.Add(spacing);
 				}
                 if (margin.Left.IsFixed || margin.Right.IsFixed)
 				{
-					indentation = new Indentation();
+					indentation = new OxW.Indentation();
                     if (margin.Left.IsFixed) indentation.Left = margin.Left.ValueInDxa.ToString(CultureInfo.InvariantCulture);
                     if (margin.Right.IsFixed) indentation.Right = margin.Right.ValueInDxa.ToString(CultureInfo.InvariantCulture);
 					containerStyleAttributes.Add(indentation);
@@ -208,7 +208,7 @@ namespace HtmlToOpenXml
             Unit textIndent = en.StyleAttributes.GetAsUnit("text-indent");
             if (textIndent.IsValid && (en.CurrentTag == "<p>" || en.CurrentTag == "<div>"))
             {
-                if (indentation == null) indentation = new Indentation();
+				if (indentation == null) indentation = new OxW.Indentation();
                 indentation.FirstLine = textIndent.ValueInDxa.ToString(CultureInfo.InvariantCulture);
                 containerStyleAttributes.Add(indentation);
             }

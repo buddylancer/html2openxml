@@ -11,11 +11,11 @@
  */
 using System;
 using System.Collections.Generic;
-using DocumentFormat.OpenXml;
+using Ox = DocumentFormat.OpenXml;
 
 namespace HtmlToOpenXml
 {
-    using TagsAtSameLevel = System.ArraySegment<DocumentFormat.OpenXml.OpenXmlElement>;
+    using TagsAtSameLevel = System.ArraySegment<Ox.OpenXmlElement>;
 
     /// <summary>
     /// Defines the styles to apply on OpenXml elements.
@@ -28,7 +28,7 @@ namespace HtmlToOpenXml
 
         protected OpenXmlStyleCollectionBase()
         {
-            tags = new Dictionary<String, Stack<ArraySegment<OpenXmlElement>>>(StringComparer.OrdinalIgnoreCase);
+            tags = new Dictionary<String, Stack<ArraySegment<Ox.OpenXmlElement>>>(StringComparer.OrdinalIgnoreCase);
         }
 
         internal virtual void Reset()
@@ -49,7 +49,7 @@ namespace HtmlToOpenXml
         /// <summary>
         /// Apply all the current Html tag (Run properties) to the specified run.
         /// </summary>
-        public abstract void ApplyTags(OpenXmlCompositeElement element);
+        public abstract void ApplyTags(Ox.OpenXmlCompositeElement element);
 
         #endregion
 
@@ -60,7 +60,7 @@ namespace HtmlToOpenXml
         /// </summary>
         /// <param name="name">The name of the tag.</param>
         /// <param name="elements">The Run properties to apply to the next build run until the tag is popped out.</param>
-        public void BeginTag(string name, List<OpenXmlElement> elements)
+        public void BeginTag(string name, List<Ox.OpenXmlElement> elements)
         {
             if (elements.Count == 0) return;
 
@@ -78,7 +78,7 @@ namespace HtmlToOpenXml
         /// </summary>
         /// <param name="name">The name of the tag.</param>
         /// <param name="elements">The Run properties to apply to the next build run until the tag is popped out.</param>
-        public void BeginTag(string name, params OpenXmlElement[] elements)
+        public void BeginTag(string name, params Ox.OpenXmlElement[] elements)
         {
 			Stack<TagsAtSameLevel> enqueuedTags;
             if (!tags.TryGetValue(name, out enqueuedTags))
@@ -98,7 +98,7 @@ namespace HtmlToOpenXml
         /// </summary>
         /// <param name="name">The name of the tag.</param>
         /// <param name="elements">The properties to apply to the next build run until the tag is popped out.</param>
-        public void MergeTag(string name, List<OpenXmlElement> elements)
+        public void MergeTag(string name, List<Ox.OpenXmlElement> elements)
         {
 			Stack<TagsAtSameLevel> enqueuedTags;
             if (!tags.TryGetValue(name, out enqueuedTags))
@@ -107,12 +107,12 @@ namespace HtmlToOpenXml
             }
             else
             {
-                Dictionary<String, OpenXmlElement> knonwTags = new Dictionary<String, OpenXmlElement>();
+				Dictionary<String, Ox.OpenXmlElement> knonwTags = new Dictionary<String, Ox.OpenXmlElement>();
                 for (int i = 0; i < elements.Count; i++)
                     if (!knonwTags.ContainsKey(elements[i].LocalName))
                         knonwTags.Add(elements[i].LocalName, elements[i]);
 
-                OpenXmlElement[] array;
+				Ox.OpenXmlElement[] array;
                 foreach (TagsAtSameLevel tagOfSameLevel in enqueuedTags)
                 {
                     array = tagOfSameLevel.Array;
@@ -123,7 +123,7 @@ namespace HtmlToOpenXml
                     }
                 }
 
-                array = new OpenXmlElement[knonwTags.Count];
+				array = new Ox.OpenXmlElement[knonwTags.Count];
                 knonwTags.Values.CopyTo(array, 0);
                 enqueuedTags.Push(new TagsAtSameLevel(array));
             }

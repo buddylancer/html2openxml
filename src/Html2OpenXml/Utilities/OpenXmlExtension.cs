@@ -10,8 +10,8 @@
  * PARTICULAR PURPOSE.
  */
 using System;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml
 {
@@ -23,12 +23,12 @@ namespace HtmlToOpenXml
     [System.Diagnostics.DebuggerStepThrough]
 	static class OpenXmlExtension
     {
-        public static bool HasChild<T>(this OpenXmlElement element) where T : OpenXmlElement
+		public static bool HasChild<T>(this Ox.OpenXmlElement element) where T : Ox.OpenXmlElement
         {
             return element.GetFirstChild<T>() != null;
         }
 
-		public static T GetLastChild<T>(this OpenXmlElement element) where T : OpenXmlElement
+		public static T GetLastChild<T>(this Ox.OpenXmlElement element) where T : Ox.OpenXmlElement
 		{
 			if (element == null) return null;
 
@@ -41,28 +41,28 @@ namespace HtmlToOpenXml
 			return null;
 		}
 
-        public static bool Equals<T>(this EnumValue<T> value, T comparand) where T : struct
+		public static bool Equals<T>(this Ox.EnumValue<T> value, T comparand) where T : struct
         {
             return value != null && value.Value.Equals(comparand);
         }
 
-		public static void InsertInProperties(this Paragraph p, Action<ParagraphProperties> @delegate)
+		public static void InsertInProperties(this OxW.Paragraph p, Action<OxW.ParagraphProperties> @delegate)
 		{
-			ParagraphProperties prop = p.GetFirstChild<ParagraphProperties>();
-			if (prop == null) p.PrependChild<ParagraphProperties>(prop = new ParagraphProperties());
+			OxW.ParagraphProperties prop = p.GetFirstChild<OxW.ParagraphProperties>();
+			if (prop == null) p.PrependChild<OxW.ParagraphProperties>(prop = new OxW.ParagraphProperties());
 
 			@delegate(prop);
 		}
 
-		public static void InsertInProperties(this Run r, Action<RunProperties> @delegate)
+		public static void InsertInProperties(this OxW.Run r, Action<OxW.RunProperties> @delegate)
 		{
-			RunProperties prop = r.GetFirstChild<RunProperties>();
-			if (prop == null) r.PrependChild<RunProperties>(prop = new RunProperties());
+			OxW.RunProperties prop = r.GetFirstChild<OxW.RunProperties>();
+			if (prop == null) r.PrependChild<OxW.RunProperties>(prop = new OxW.RunProperties());
 
 			@delegate(prop);
 		}
 
-		public static void InsertInDocProperties(this Drawing d, params OpenXmlElement[] newChildren)
+		public static void InsertInDocProperties(this OxW.Drawing d, params Ox.OpenXmlElement[] newChildren)
 		{
 			wp.Inline inline = d.GetFirstChild<wp.Inline>();
 			wp.DocProperties prop = inline.GetFirstChild<wp.DocProperties>();
@@ -71,30 +71,30 @@ namespace HtmlToOpenXml
 			prop.Append(newChildren);
 		}
 
-        public static bool Compare(this PageSize pageSize, PageOrientationValues orientation)
+		public static bool Compare(this OxW.PageSize pageSize, OxW.PageOrientationValues orientation)
         {
-            PageOrientationValues pageOrientation;
+			OxW.PageOrientationValues pageOrientation;
 
             if (pageSize.Orient != null) pageOrientation = pageSize.Orient.Value;
-            else if (pageSize.Width > pageSize.Height) pageOrientation = PageOrientationValues.Landscape;
-            else pageOrientation = PageOrientationValues.Portrait;
+			else if (pageSize.Width > pageSize.Height) pageOrientation = OxW.PageOrientationValues.Landscape;
+			else pageOrientation = OxW.PageOrientationValues.Portrait;
 
             return pageOrientation == orientation;
         }
 
 		// needed since December 2009 CTP refactoring, where casting is not anymore an option
 
-		public static TableRowAlignmentValues ToTableRowAlignment(this JustificationValues val)
+		public static OxW.TableRowAlignmentValues ToTableRowAlignment(this OxW.JustificationValues val)
 		{
-			if (val == JustificationValues.Center) return TableRowAlignmentValues.Center;
-			else if (val == JustificationValues.Right) return TableRowAlignmentValues.Right;
-			else return TableRowAlignmentValues.Left;
+			if (val == OxW.JustificationValues.Center) return OxW.TableRowAlignmentValues.Center;
+			else if (val == OxW.JustificationValues.Right) return OxW.TableRowAlignmentValues.Right;
+			else return OxW.TableRowAlignmentValues.Left;
 		}
-		public static JustificationValues ToJustification(this TableRowAlignmentValues val)
+		public static OxW.JustificationValues ToJustification(this OxW.TableRowAlignmentValues val)
 		{
-			if (val == TableRowAlignmentValues.Left) return JustificationValues.Left;
-			else if (val == TableRowAlignmentValues.Center) return JustificationValues.Center;
-			else return JustificationValues.Right;
+			if (val == OxW.TableRowAlignmentValues.Left) return OxW.JustificationValues.Left;
+			else if (val == OxW.TableRowAlignmentValues.Center) return OxW.JustificationValues.Center;
+			else return OxW.JustificationValues.Right;
 		}
     }
 }

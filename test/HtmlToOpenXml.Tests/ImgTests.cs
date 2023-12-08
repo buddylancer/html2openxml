@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxP = DocumentFormat.OpenXml.Packaging;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml.Tests
 {
@@ -27,8 +27,8 @@ namespace HtmlToOpenXml.Tests
         {
             var elements = converter.Parse(@"<img src='https://www.w3schools.com/tags/smiley.gif' border='1'>");
             AssertIsImg(elements[0]);
-            var run = elements[0].GetFirstChild<Run>();
-            RunProperties runProperties = run.GetFirstChild<RunProperties>();
+			var run = elements[0].GetFirstChild<OxW.Run>();
+			OxW.RunProperties runProperties = run.GetFirstChild<OxW.RunProperties>();
             Assert.IsNotNull(runProperties);
             Assert.IsNotNull(runProperties.Border);
         }
@@ -43,11 +43,11 @@ namespace HtmlToOpenXml.Tests
             AssertIsImg(elements[0]);
         }
 
-        private void AssertIsImg (OpenXmlCompositeElement elements)
+        private void AssertIsImg (Ox.OpenXmlCompositeElement elements)
         {
-            var run = elements.GetFirstChild<Run>();
+			var run = elements.GetFirstChild<OxW.Run>();
             Assert.IsNotNull(run);
-            var img = run.GetFirstChild<Drawing>();
+			var img = run.GetFirstChild<OxW.Drawing>();
             Assert.IsNotNull(img);
             Assert.IsNotNull(img.Inline.Graphic.GraphicData);
             var pic = img.Inline.Graphic.GraphicData.GetFirstChild<pic.Picture>();
@@ -55,7 +55,7 @@ namespace HtmlToOpenXml.Tests
 
             var imagePartId = pic.BlipFill.Blip.Embed.Value;
             var part = mainPart.GetPartById(imagePartId);
-            Assert.That(part, Is.TypeOf(typeof(ImagePart)));
+			Assert.That(part, Is.TypeOf(typeof(OxP.ImagePart)));
         }
     }
 }

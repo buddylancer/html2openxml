@@ -1,6 +1,6 @@
 using NUnit.Framework;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml.Tests
 {
@@ -33,10 +33,10 @@ namespace HtmlToOpenXml.Tests
             AssertIsHr (elements[1], true);
         }
 
-        private void AssertIsHr (OpenXmlCompositeElement hr, bool expectSpacing)
+		private void AssertIsHr(Ox.OpenXmlCompositeElement hr, bool expectSpacing)
         {
             Assert.That(hr.ChildElements.Count, Is.EqualTo(2));
-            var props = hr.GetFirstChild<ParagraphProperties>();
+			var props = hr.GetFirstChild<OxW.ParagraphProperties>();
             Assert.IsNotNull(props);
 
             Assert.That(props.ChildElements.Count, Is.EqualTo(expectSpacing? 2:1));

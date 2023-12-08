@@ -13,7 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using DocumentFormat.OpenXml.Packaging;
+using OxP = DocumentFormat.OpenXml.Packaging;
 
 namespace HtmlToOpenXml.IO
 {
@@ -23,25 +23,25 @@ namespace HtmlToOpenXml.IO
     sealed class ImagePrefetcher
     {
         // Map extension to ImagePartType
-        private static readonly Dictionary<string, ImagePartType> knownExtensions = new Dictionary<string, ImagePartType>(StringComparer.OrdinalIgnoreCase) {
-            { ".gif", ImagePartType.Gif },
-            { ".bmp", ImagePartType.Bmp },
-            { ".emf", ImagePartType.Emf },
-            { ".ico", ImagePartType.Icon },
-            { ".jpeg", ImagePartType.Jpeg },
-            { ".jpg", ImagePartType.Jpeg },
-            { ".jpe", ImagePartType.Jpeg },
-            { ".pcx", ImagePartType.Pcx },
-            { ".png", ImagePartType.Png },
-            { ".tiff", ImagePartType.Tiff },
-            { ".wmf", ImagePartType.Wmf }
+		private static readonly Dictionary<string, OxP.ImagePartType> knownExtensions = new Dictionary<string, OxP.ImagePartType>(StringComparer.OrdinalIgnoreCase) {
+            { ".gif", OxP.ImagePartType.Gif },
+            { ".bmp", OxP.ImagePartType.Bmp },
+            { ".emf", OxP.ImagePartType.Emf },
+            { ".ico", OxP.ImagePartType.Icon },
+            { ".jpeg", OxP.ImagePartType.Jpeg },
+            { ".jpg", OxP.ImagePartType.Jpeg },
+            { ".jpe", OxP.ImagePartType.Jpeg },
+            { ".pcx", OxP.ImagePartType.Pcx },
+            { ".png", OxP.ImagePartType.Png },
+            { ".tiff", OxP.ImagePartType.Tiff },
+            { ".wmf", OxP.ImagePartType.Wmf }
         };
-        private readonly MainDocumentPart mainPart;
+		private readonly OxP.MainDocumentPart mainPart;
         private readonly IWebRequest resourceLoader;
         private HtmlImageInfoCollection prefetchedImages;
 
 
-        public ImagePrefetcher(MainDocumentPart mainPart, IWebRequest resourceLoader)
+		public ImagePrefetcher(OxP.MainDocumentPart mainPart, IWebRequest resourceLoader)
         {
             this.mainPart = mainPart;
             this.resourceLoader = resourceLoader;
@@ -88,7 +88,7 @@ namespace HtmlToOpenXml.IO
             }
 
             HtmlImageInfo info = new HtmlImageInfo() { Source = src };
-            ImagePartType type;
+			OxP.ImagePartType type;
             using (response)
             {
                 // For requested url with no filename, we need to read the media mime type if provided
@@ -123,7 +123,7 @@ namespace HtmlToOpenXml.IO
             if (DataUri.TryCreate(src, out dataUri))
             {
                 Size size;
-                ImagePartType type; knownContentType.TryGetValue(dataUri.Mime, out type);
+				OxP.ImagePartType type; knownContentType.TryGetValue(dataUri.Mime, out type);
                 var ipart = mainPart.AddImagePart(type);
                 using (var outputStream = ipart.GetStream(FileMode.Create))
                 {
@@ -148,43 +148,43 @@ namespace HtmlToOpenXml.IO
         // Private Implementation
 
         // http://stackoverflow.com/questions/58510/using-net-how-can-you-find-the-mime-type-of-a-file-based-on-the-file-signature
-        private static Dictionary<string, ImagePartType> knownContentType = new Dictionary<String, ImagePartType>(StringComparer.OrdinalIgnoreCase) {
-            { "image/gif", ImagePartType.Gif },
-            { "image/pjpeg", ImagePartType.Jpeg },
-            { "image/jpg", ImagePartType.Jpeg },
-            { "image/jpeg", ImagePartType.Jpeg },
-            { "image/x-png", ImagePartType.Png },
-            { "image/png", ImagePartType.Png },
-            { "image/tiff", ImagePartType.Tiff },
-            { "image/vnd.microsoft.icon", ImagePartType.Icon },
+		private static Dictionary<string, OxP.ImagePartType> knownContentType = new Dictionary<String, OxP.ImagePartType>(StringComparer.OrdinalIgnoreCase) {
+            { "image/gif", OxP.ImagePartType.Gif },
+            { "image/pjpeg", OxP.ImagePartType.Jpeg },
+            { "image/jpg", OxP.ImagePartType.Jpeg },
+            { "image/jpeg", OxP.ImagePartType.Jpeg },
+            { "image/x-png", OxP.ImagePartType.Png },
+            { "image/png", OxP.ImagePartType.Png },
+            { "image/tiff", OxP.ImagePartType.Tiff },
+            { "image/vnd.microsoft.icon", OxP.ImagePartType.Icon },
             // these icons mime type are wrong but we should nevertheless take care (http://en.wikipedia.org/wiki/ICO_%28file_format%29#MIME_type)
-            { "image/x-icon", ImagePartType.Icon },
-            { "image/icon", ImagePartType.Icon },
-            { "image/ico", ImagePartType.Icon },
-            { "text/ico", ImagePartType.Icon },
-            { "text/application-ico", ImagePartType.Icon },
-            { "image/bmp", ImagePartType.Bmp }
+            { "image/x-icon", OxP.ImagePartType.Icon },
+            { "image/icon", OxP.ImagePartType.Icon },
+            { "image/ico", OxP.ImagePartType.Icon },
+            { "text/ico", OxP.ImagePartType.Icon },
+            { "text/application-ico", OxP.ImagePartType.Icon },
+            { "image/bmp", OxP.ImagePartType.Bmp }
         };
 
         /// <summary>
         /// Inspect the response headers of a web request and decode the mime type if provided
         /// </summary>
         /// <returns>Returns the extension of the image if provideds.</returns>
-        private static bool TryInspectMimeType(string contentType, out ImagePartType type)
+		private static bool TryInspectMimeType(string contentType, out OxP.ImagePartType type)
         {
             // can be null when the protocol used doesn't allow response headers
             if (contentType != null &&
                 knownContentType.TryGetValue(contentType, out type))
                 return true;
 
-            type = default(ImagePartType);
+			type = default(OxP.ImagePartType);
             return false;
         }
 
         /// <summary>
         /// Gets the OpenXml ImagePartType associated to an image.
         /// </summary>
-        private static bool TryGuessTypeFromUri(Uri uri, out ImagePartType type)
+		private static bool TryGuessTypeFromUri(Uri uri, out OxP.ImagePartType type)
         {
             string extension = Path.GetExtension(uri.IsAbsoluteUri ? uri.Segments[uri.Segments.Length - 1] : uri.OriginalString);
             if (knownExtensions.TryGetValue(extension, out type)) return true;
@@ -200,21 +200,21 @@ namespace HtmlToOpenXml.IO
         /// <summary>
         /// Gets the OpenXml ImagePartType associated to an image.
         /// </summary>
-        private static bool TryGuessTypeFromStream(Stream stream, out ImagePartType type)
+		private static bool TryGuessTypeFromStream(Stream stream, out OxP.ImagePartType type)
         {
 			ImageHeader.FileType guessType;
             if (ImageHeader.TryDetectFileType(stream, out guessType))
             {
                 switch (guessType)
                 {
-                    case ImageHeader.FileType.Bitmap: type = ImagePartType.Bmp; return true;
-                    case ImageHeader.FileType.Emf: type = ImagePartType.Emf; return true;
-                    case ImageHeader.FileType.Gif: type = ImagePartType.Gif; return true;
-                    case ImageHeader.FileType.Jpeg: type = ImagePartType.Jpeg; return true;
-                    case ImageHeader.FileType.Png: type = ImagePartType.Png; return true;
+					case ImageHeader.FileType.Bitmap: type = OxP.ImagePartType.Bmp; return true;
+					case ImageHeader.FileType.Emf: type = OxP.ImagePartType.Emf; return true;
+					case ImageHeader.FileType.Gif: type = OxP.ImagePartType.Gif; return true;
+					case ImageHeader.FileType.Jpeg: type = OxP.ImagePartType.Jpeg; return true;
+					case ImageHeader.FileType.Png: type = OxP.ImagePartType.Png; return true;
                 }
             }
-            type = ImagePartType.Bmp;
+			type = OxP.ImagePartType.Bmp;
             return false;
         }
 

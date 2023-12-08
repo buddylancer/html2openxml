@@ -1,6 +1,6 @@
 using NUnit.Framework;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml.Tests
 {
@@ -10,25 +10,25 @@ namespace HtmlToOpenXml.Tests
     [TestFixture]
     public class ElementTests : HtmlConverterTestBase
     {
-        [GenericTestCase(typeof(Bold), @"<b>Bold</b>")]
-        [GenericTestCase(typeof(Bold), @"<strong>Strong</strong>")]
-        [GenericTestCase(typeof(Italic), @"<i>Italic</i>")]
-        [GenericTestCase(typeof(Italic), @"<em>Italic</em>")]
-        [GenericTestCase(typeof(Strike), @"<s>Strike</s>")]
-        [GenericTestCase(typeof(Strike), @"<strike>Strike</strike>")]
-        [GenericTestCase(typeof(Strike), @"<del>Del</del>")]
-        [GenericTestCase(typeof(Underline), @"<u>Underline</u>")]
-        [GenericTestCase(typeof(Underline), @"<ins>Inserted</ins>")]
-        public void ParseHtmlElements<T> (string html) where T : OpenXmlElement
+		[GenericTestCase(typeof(OxW.Bold), @"<b>Bold</b>")]
+		[GenericTestCase(typeof(OxW.Bold), @"<strong>Strong</strong>")]
+		[GenericTestCase(typeof(OxW.Italic), @"<i>Italic</i>")]
+		[GenericTestCase(typeof(OxW.Italic), @"<em>Italic</em>")]
+		[GenericTestCase(typeof(OxW.Strike), @"<s>Strike</s>")]
+		[GenericTestCase(typeof(OxW.Strike), @"<strike>Strike</strike>")]
+		[GenericTestCase(typeof(OxW.Strike), @"<del>Del</del>")]
+		[GenericTestCase(typeof(OxW.Underline), @"<u>Underline</u>")]
+		[GenericTestCase(typeof(OxW.Underline), @"<ins>Inserted</ins>")]
+		public void ParseHtmlElements<T>(string html) where T : Ox.OpenXmlElement
         {
             ParsePhrasing<T>(html);
         }
 
-        [TestCase(@"<sub>Subscript</sub>", VerticalPositionValues.Subscript)]
-        [TestCase(@"<sup>Superscript</sup>", VerticalPositionValues.Superscript)]
-        public void ParseSubSup (string html, VerticalPositionValues val)
+		[TestCase(@"<sub>Subscript</sub>", OxW.VerticalPositionValues.Subscript)]
+		[TestCase(@"<sup>Superscript</sup>", OxW.VerticalPositionValues.Superscript)]
+		public void ParseSubSup(string html, OxW.VerticalPositionValues val)
         {
-            var textAlign = ParsePhrasing<VerticalTextAlignment>(html);
+			var textAlign = ParsePhrasing<OxW.VerticalTextAlignment>(html);
             Assert.That(textAlign.Val.HasValue, Is.EqualTo(true));
             Assert.That(textAlign.Val.Value, Is.EqualTo(val));
         }
@@ -44,17 +44,17 @@ text-decoration:underline;
 "">bold with italic style</b>");
             Assert.That(elements.Count, Is.EqualTo(1));
 
-            Run run = elements[0].GetFirstChild<Run>();
+			OxW.Run run = elements[0].GetFirstChild<OxW.Run>();
             Assert.IsNotNull(run);
 
-            RunProperties runProperties = run.GetFirstChild<RunProperties>();
+			OxW.RunProperties runProperties = run.GetFirstChild<OxW.RunProperties>();
             Assert.IsNotNull(runProperties);
             Assert.Multiple(() => {
-                Assert.IsTrue(runProperties.HasChild<Bold>());
-                Assert.IsTrue(runProperties.HasChild<Italic>());
-                Assert.IsTrue(runProperties.HasChild<FontSize>());
-                Assert.IsTrue(runProperties.HasChild<Underline>());
-                Assert.IsTrue(runProperties.HasChild<Color>());
+				Assert.IsTrue(runProperties.HasChild<OxW.Bold>());
+				Assert.IsTrue(runProperties.HasChild<OxW.Italic>());
+				Assert.IsTrue(runProperties.HasChild<OxW.FontSize>());
+				Assert.IsTrue(runProperties.HasChild<OxW.Underline>());
+				Assert.IsTrue(runProperties.HasChild<OxW.Color>());
             });
         }
 
@@ -80,24 +80,24 @@ text-decoration:underline;
             var elements = converter.Parse(html);
             Assert.That(elements.Count, Is.EqualTo(1));
 
-            Run run = elements[0].GetFirstChild<Run>();
+			OxW.Run run = elements[0].GetFirstChild<OxW.Run>();
             Assert.IsNotNull(run);
             if (hasQuote)
             {
                 Assert.That(run.InnerText, Is.EqualTo(" " + converter.HtmlStyles.QuoteCharacters.Prefix));
 
-                Run lastRun = elements[0].GetLastChild<Run>();
+				OxW.Run lastRun = elements[0].GetLastChild<OxW.Run>();
                 Assert.IsNotNull(run);
                 Assert.That(lastRun.InnerText, Is.EqualTo(converter.HtmlStyles.QuoteCharacters.Suffix));
 
                 // focus the content run
-                run = (Run) run.NextSibling();
+				run = (OxW.Run)run.NextSibling();
             }
 
-            RunProperties runProperties = run.GetFirstChild<RunProperties>();
+			OxW.RunProperties runProperties = run.GetFirstChild<OxW.RunProperties>();
             Assert.IsNotNull(runProperties);
 
-            var runStyle = runProperties.GetFirstChild<RunStyle>();
+			var runStyle = runProperties.GetFirstChild<OxW.RunStyle>();
             Assert.IsNotNull(runStyle);
             Assert.That(runStyle.Val.Value, Is.EqualTo("QuoteChar"));
         }
@@ -109,21 +109,21 @@ text-decoration:underline;
             Assert.That(elements.Count, Is.EqualTo(1));
             Assert.That(elements[0].ChildElements.Count, Is.EqualTo(3));
 
-            Assert.That(elements[0].ChildElements[0], Is.InstanceOf(typeof(Run)));
-            Assert.That(elements[0].ChildElements[1], Is.InstanceOf(typeof(Run)));
-            Assert.That(elements[0].ChildElements[2], Is.InstanceOf(typeof(Run)));
-            Assert.IsNotNull(((Run)elements[0].ChildElements[1]).GetFirstChild<Break>());
+			Assert.That(elements[0].ChildElements[0], Is.InstanceOf(typeof(OxW.Run)));
+			Assert.That(elements[0].ChildElements[1], Is.InstanceOf(typeof(OxW.Run)));
+			Assert.That(elements[0].ChildElements[2], Is.InstanceOf(typeof(OxW.Run)));
+			Assert.IsNotNull(((OxW.Run)elements[0].ChildElements[1]).GetFirstChild<OxW.Break>());
         }
 
-        private T ParsePhrasing<T> (string html) where T : OpenXmlElement
+		private T ParsePhrasing<T>(string html) where T : Ox.OpenXmlElement
         {
             var elements = converter.Parse(html);
             Assert.That(elements.Count, Is.EqualTo(1));
 
-            Run run = elements[0].GetFirstChild<Run>();
+			OxW.Run run = elements[0].GetFirstChild<OxW.Run>();
             Assert.IsNotNull(run);
 
-            RunProperties runProperties = run.GetFirstChild<RunProperties>();
+			OxW.RunProperties runProperties = run.GetFirstChild<OxW.RunProperties>();
             Assert.IsNotNull(runProperties);
 
             var tag = runProperties.GetFirstChild<T>();

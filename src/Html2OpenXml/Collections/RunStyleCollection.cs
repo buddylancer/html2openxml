@@ -12,8 +12,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml
 {
@@ -32,23 +32,23 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Apply all the current Html tag (Run properties) to the specified run.
 		/// </summary>
-		public override void ApplyTags(OpenXmlCompositeElement run)
+		public override void ApplyTags(Ox.OpenXmlCompositeElement run)
 		{
 			if (tags.Count == 0 && DefaultRunStyle == null) return;
 
-			RunProperties properties = run.GetFirstChild<RunProperties>();
-			if (properties == null) run.PrependChild<RunProperties>(properties = new RunProperties());
+			OxW.RunProperties properties = run.GetFirstChild<OxW.RunProperties>();
+			if (properties == null) run.PrependChild<OxW.RunProperties>(properties = new OxW.RunProperties());
 
 			var en = tags.GetEnumerator();
 			while (en.MoveNext())
 			{
 				TagsAtSameLevel tagsOfSameLevel = en.Current.Value.Peek();
-				foreach (OpenXmlElement tag in tagsOfSameLevel.Array)
+				foreach (Ox.OpenXmlElement tag in tagsOfSameLevel.Array)
 					properties.AddChild(tag.CloneNode(true));
 			}
 
 			if (this.DefaultRunStyle != null)
-				properties.RunStyle = new RunStyle() { Val = this.DefaultRunStyle };
+				properties.RunStyle = new OxW.RunStyle() { Val = this.DefaultRunStyle };
 		}
 
 		#region ProcessCommonAttributes
@@ -58,31 +58,31 @@ namespace HtmlToOpenXml
 		/// </summary>
         /// <param name="en">The Html parser.</param>
 		/// <param name="styleAttributes">The collection of attributes where to store new discovered attributes.</param>
-		public void ProcessCommonAttributes(HtmlEnumerator en, IList<OpenXmlElement> styleAttributes)
+		public void ProcessCommonAttributes(HtmlEnumerator en, IList<Ox.OpenXmlElement> styleAttributes)
 		{
 			if (en.Attributes.Count == 0) return;
 
 			var colorValue = en.StyleAttributes.GetAsColor("color");
 			if (colorValue.IsEmpty) colorValue = en.Attributes.GetAsColor("color");
 			if (!colorValue.IsEmpty)
-				styleAttributes.Add(new Color { Val = colorValue.ToHexString() });
+				styleAttributes.Add(new OxW.Color { Val = colorValue.ToHexString() });
 
 			colorValue = en.StyleAttributes.GetAsColor("background-color");
 			if (!colorValue.IsEmpty)
 			{
 				// change the way the background-color renders. It now uses Shading instead of Highlight.
 				// Changes brought by Wude on http://html2openxml.codeplex.com/discussions/277570
-				styleAttributes.Add(new Shading { Val = ShadingPatternValues.Clear, Fill = colorValue.ToHexString() });
+				styleAttributes.Add(new OxW.Shading { Val = OxW.ShadingPatternValues.Clear, Fill = colorValue.ToHexString() });
 			}
 
 			var decorations = Converter.ToTextDecoration(en.StyleAttributes["text-decoration"]);
 			if ((decorations & TextDecoration.Underline) != 0)
 			{
-				styleAttributes.Add(new Underline { Val = UnderlineValues.Single });
+				styleAttributes.Add(new OxW.Underline { Val = OxW.UnderlineValues.Single });
 			}
 			if ((decorations & TextDecoration.LineThrough) != 0)
 			{
-				styleAttributes.Add(new Strike());
+				styleAttributes.Add(new OxW.Strike());
 			}
 
 			String[] classes = en.Attributes.GetAsClass();
@@ -90,10 +90,10 @@ namespace HtmlToOpenXml
 			{
 				for (int i = 0; i < classes.Length; i++)
 				{
-					string className = documentStyle.GetStyle(classes[i], StyleValues.Character, ignoreCase: true);
+					string className = documentStyle.GetStyle(classes[i], OxW.StyleValues.Character, ignoreCase: true);
 					if (className != null) // only one Style can be applied in OpenXml and dealing with inheritance is out of scope
 					{
-						styleAttributes.Add(new RunStyle() { Val = className });
+						styleAttributes.Add(new OxW.RunStyle() { Val = className });
 						break;
 					}
 				}
@@ -103,20 +103,20 @@ namespace HtmlToOpenXml
 			if (!font.IsEmpty)
 			{
 				if (font.Style == FontStyle.Italic)
-					styleAttributes.Add(new Italic());
+					styleAttributes.Add(new OxW.Italic());
 
 				if (font.Weight == FontWeight.Bold || font.Weight == FontWeight.Bolder)
-					styleAttributes.Add(new Bold());
+					styleAttributes.Add(new OxW.Bold());
 
 				if (font.Variant == FontVariant.SmallCaps)
-					styleAttributes.Add(new SmallCaps());
+					styleAttributes.Add(new OxW.SmallCaps());
 
 				if (font.Family != null)
-					styleAttributes.Add(new RunFonts() { Ascii = font.Family, HighAnsi = font.Family });
+					styleAttributes.Add(new OxW.RunFonts() { Ascii = font.Family, HighAnsi = font.Family });
 
 				// size are half-point font size
                 if (font.Size.IsFixed)
-					styleAttributes.Add(new FontSize() { Val = (font.Size.ValueInPoint * 2).ToString(CultureInfo.InvariantCulture) });
+					styleAttributes.Add(new OxW.FontSize() { Val = (font.Size.ValueInPoint * 2).ToString(CultureInfo.InvariantCulture) });
 			}
 		}
 

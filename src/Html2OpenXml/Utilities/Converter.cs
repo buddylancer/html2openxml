@@ -11,7 +11,7 @@
  */
 using System;
 using System.Globalization;
-using DocumentFormat.OpenXml.Wordprocessing;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml
 {
@@ -25,15 +25,15 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Convert the Html text align attribute (horizontal alignement) to its corresponding OpenXml value.
 		/// </summary>
-		public static JustificationValues? ToParagraphAlign(string htmlAlign)
+		public static OxW.JustificationValues? ToParagraphAlign(string htmlAlign)
 		{
 			if (htmlAlign == null) return null;
 			switch (htmlAlign.ToLowerInvariant())
 			{
-				case "left": return JustificationValues.Left;
-				case "right": return JustificationValues.Right;
-				case "center": return JustificationValues.Center;
-				case "justify": return JustificationValues.Both;
+				case "left": return OxW.JustificationValues.Left;
+				case "right": return OxW.JustificationValues.Right;
+				case "center": return OxW.JustificationValues.Center;
+				case "justify": return OxW.JustificationValues.Both;
 			}
 
 			return null;
@@ -46,14 +46,14 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Convert the Html vertical-align attribute to its corresponding OpenXml value.
 		/// </summary>
-		public static TableVerticalAlignmentValues? ToVAlign(string htmlAlign)
+		public static OxW.TableVerticalAlignmentValues? ToVAlign(string htmlAlign)
 		{
 			if (htmlAlign == null) return null;
 			switch (htmlAlign.ToLowerInvariant())
 			{
-				case "top": return TableVerticalAlignmentValues.Top;
-				case "middle": return TableVerticalAlignmentValues.Center;
-				case "bottom": return TableVerticalAlignmentValues.Bottom;
+				case "top": return OxW.TableVerticalAlignmentValues.Top;
+				case "middle": return OxW.TableVerticalAlignmentValues.Center;
+				case "bottom": return OxW.TableVerticalAlignmentValues.Bottom;
 			}
 
 			return null;
@@ -175,19 +175,19 @@ namespace HtmlToOpenXml
 
 		#region ToBorderStyle
 
-		public static BorderValues ToBorderStyle(string borderStyle)
+		public static OxW.BorderValues ToBorderStyle(string borderStyle)
 		{
-			if (borderStyle == null) return BorderValues.Nil;
+			if (borderStyle == null) return OxW.BorderValues.Nil;
 			switch (borderStyle.ToLowerInvariant())
 			{
-				case "dotted": return BorderValues.Dotted;
-				case "dashed": return BorderValues.Dashed;
-				case "solid": return BorderValues.Single;
-				case "double": return BorderValues.Double;
-				case "inset": return BorderValues.Inset;
-				case "outset": return BorderValues.Outset;
-				case "none": return BorderValues.None;
-				default: return BorderValues.Nil;
+				case "dotted": return OxW.BorderValues.Dotted;
+				case "dashed": return OxW.BorderValues.Dashed;
+				case "solid": return OxW.BorderValues.Single;
+				case "double": return OxW.BorderValues.Double;
+				case "inset": return OxW.BorderValues.Inset;
+				case "outset": return OxW.BorderValues.Outset;
+				case "none": return OxW.BorderValues.None;
+				default: return OxW.BorderValues.Nil;
 			}
 		}
 
@@ -217,12 +217,12 @@ namespace HtmlToOpenXml
 
 		#region ToPageOrientation
 
-		public static PageOrientationValues ToPageOrientation(String orientation)
+		public static OxW.PageOrientationValues ToPageOrientation(String orientation)
 		{
 			if (String.Equals(orientation, "landscape", StringComparison.OrdinalIgnoreCase))
-				return PageOrientationValues.Landscape;
+				return OxW.PageOrientationValues.Landscape;
 
-			return PageOrientationValues.Portrait;
+			return OxW.PageOrientationValues.Portrait;
 		}
 
 		#endregion

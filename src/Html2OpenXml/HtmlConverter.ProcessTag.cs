@@ -14,16 +14,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxP = DocumentFormat.OpenXml.Packaging;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
+using OxD = DocumentFormat.OpenXml.Drawing;
 
 namespace HtmlToOpenXml
 {
-	using a = DocumentFormat.OpenXml.Drawing;
-	using pic = DocumentFormat.OpenXml.Drawing.Pictures;
-	using wBorder = DocumentFormat.OpenXml.Wordprocessing.Border;
-
 	partial class HtmlConverter
 	{
 		//____________________________________________________________________
@@ -41,27 +38,27 @@ namespace HtmlToOpenXml
 
 			AlternateProcessHtmlChunks(en, en.ClosingCurrentTag);
 
-			if (elements.Count > 0 && elements[0] is Run)
+			if (elements.Count > 0 && elements[0] is OxW.Run)
 			{
 				string runStyle;
-				FootnoteEndnoteReferenceType reference;
+				OxW.FootnoteEndnoteReferenceType reference;
 
 				if (this.AcronymPosition == AcronymPosition.PageEnd)
 				{
-					reference = new FootnoteReference() { Id = AddFootnoteReference(title) };
+					reference = new OxW.FootnoteReference() { Id = AddFootnoteReference(title) };
 					runStyle = htmlStyles.DefaultStyles.FootnoteReferenceStyle;
 				}
 				else
 				{
-					reference = new EndnoteReference() { Id = AddEndnoteReference(title) };
+					reference = new OxW.EndnoteReference() { Id = AddEndnoteReference(title) };
 					runStyle = htmlStyles.DefaultStyles.EndnoteReferenceStyle;
 				}
 
-				Run run;
+				OxW.Run run;
 				elements.Add(
-					run = new Run(
-						new RunProperties {
-							RunStyle = new RunStyle() { Val = htmlStyles.GetStyle(runStyle, StyleValues.Character) }
+					run = new OxW.Run(
+						new OxW.RunProperties {
+							RunStyle = new OxW.RunStyle() { Val = htmlStyles.GetStyle(runStyle, OxW.StyleValues.Character) }
 						},
 						reference));
 			}
@@ -78,31 +75,31 @@ namespace HtmlToOpenXml
 			string tagName = en.CurrentTag;
 			string cite = en.Attributes["cite"];
 
-			htmlStyles.Paragraph.BeginTag(en.CurrentTag, new ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.IntenseQuoteStyle) });
+			htmlStyles.Paragraph.BeginTag(en.CurrentTag, new OxW.ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.IntenseQuoteStyle) });
 
 			AlternateProcessHtmlChunks(en, en.ClosingCurrentTag);
 
 			if (cite != null)
 			{
 				string runStyle;
-				FootnoteEndnoteReferenceType reference;
+				OxW.FootnoteEndnoteReferenceType reference;
 
 				if (this.AcronymPosition == AcronymPosition.PageEnd)
 				{
-					reference = new FootnoteReference() { Id = AddFootnoteReference(cite) };
+					reference = new OxW.FootnoteReference() { Id = AddFootnoteReference(cite) };
 					runStyle = htmlStyles.DefaultStyles.FootnoteReferenceStyle;
 				}
 				else
 				{
-					reference = new EndnoteReference() { Id = AddEndnoteReference(cite) };
+					reference = new OxW.EndnoteReference() { Id = AddEndnoteReference(cite) };
 					runStyle = htmlStyles.DefaultStyles.EndnoteReferenceStyle;
 				}
 
-				Run run;
+				OxW.Run run;
 				elements.Add(
-					run = new Run(
-						new RunProperties {
-							RunStyle = new RunStyle() { Val = htmlStyles.GetStyle(runStyle, StyleValues.Character) }
+					run = new OxW.Run(
+						new OxW.RunProperties {
+							RunStyle = new OxW.RunStyle() { Val = htmlStyles.GetStyle(runStyle, OxW.StyleValues.Character) }
 						},
 						reference));
 			}
@@ -117,7 +114,7 @@ namespace HtmlToOpenXml
 
 		private void ProcessBody(HtmlEnumerator en)
 		{
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>();
 			htmlStyles.Paragraph.ProcessCommonAttributes(en, styleAttributes);
 
 			if (styleAttributes.Count > 0)
@@ -128,21 +125,21 @@ namespace HtmlToOpenXml
 			string attr = en.StyleAttributes["page-orientation"];
 			if (attr != null)
 			{
-				PageOrientationValues orientation = Converter.ToPageOrientation(attr);
+				OxW.PageOrientationValues orientation = Converter.ToPageOrientation(attr);
 
-                SectionProperties sectionProperties = mainPart.Document.Body.GetFirstChild<SectionProperties>();
-                if (sectionProperties == null || sectionProperties.GetFirstChild<PageSize>() == null)
+				OxW.SectionProperties sectionProperties = mainPart.Document.Body.GetFirstChild<OxW.SectionProperties>();
+				if (sectionProperties == null || sectionProperties.GetFirstChild<OxW.PageSize>() == null)
                 {
                     mainPart.Document.Body.Append(HtmlConverter.ChangePageOrientation(orientation));
                 }
                 else
                 {
-                    PageSize pageSize = sectionProperties.GetFirstChild<PageSize>();
+					OxW.PageSize pageSize = sectionProperties.GetFirstChild<OxW.PageSize>();
                     if (!pageSize.Compare(orientation))
                     {
-                        SectionProperties validSectionProp = ChangePageOrientation(orientation);
+						OxW.SectionProperties validSectionProp = ChangePageOrientation(orientation);
                         if (pageSize != null) pageSize.Remove();
-                        sectionProperties.PrependChild(validSectionProp.GetFirstChild<PageSize>().CloneNode(true));
+						sectionProperties.PrependChild(validSectionProp.GetFirstChild<OxW.PageSize>().CloneNode(true));
                     }
                 }
             }
@@ -154,7 +151,7 @@ namespace HtmlToOpenXml
 
 		private void ProcessBr(HtmlEnumerator en)
 		{
-			elements.Add(new Run(new Break()));
+			elements.Add(new OxW.Run(new OxW.Break()));
 		}
 
 		#endregion
@@ -163,7 +160,7 @@ namespace HtmlToOpenXml
 
 		private void ProcessCite(HtmlEnumerator en)
 		{
-			ProcessHtmlElement<RunStyle>(en, new RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.QuoteStyle, StyleValues.Character) });
+			ProcessHtmlElement<OxW.RunStyle>(en, new OxW.RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.QuoteStyle, OxW.StyleValues.Character) });
 		}
 
 		#endregion
@@ -173,7 +170,7 @@ namespace HtmlToOpenXml
 		private void ProcessDefinitionList(HtmlEnumerator en)
 		{
 			ProcessParagraph(en);
-			currentParagraph.InsertInProperties(prop => prop.SpacingBetweenLines = new SpacingBetweenLines() { After = "0" });
+			currentParagraph.InsertInProperties(prop => prop.SpacingBetweenLines = new OxW.SpacingBetweenLines() { After = "0" });
 		}
 
 		#endregion
@@ -187,8 +184,8 @@ namespace HtmlToOpenXml
 			currentParagraph = htmlStyles.Paragraph.NewParagraph();
 			currentParagraph.Append(elements);
 			currentParagraph.InsertInProperties(prop => {
-				prop.Indentation = new Indentation() { FirstLine = "708" };
-				prop.SpacingBetweenLines = new SpacingBetweenLines() { After = "0" };
+				prop.Indentation = new OxW.Indentation() { FirstLine = "708" };
+				prop.SpacingBetweenLines = new OxW.SpacingBetweenLines() { After = "0" };
 			});
 
 			// Restore the original elements list
@@ -206,7 +203,7 @@ namespace HtmlToOpenXml
 			// the paragraph, we don't want to apply the style on the old paragraph but on a new one.
 			if (en.Attributes.Count == 0 || (en.StyleAttributes["text-align"] == null && en.Attributes["align"] == null && en.StyleAttributes.GetAsBorder("border").IsEmpty))
 			{
-				List<OpenXmlElement> runStyleAttributes = new List<OpenXmlElement>();
+				List<Ox.OpenXmlElement> runStyleAttributes = new List<Ox.OpenXmlElement>();
 				bool newParagraph = ProcessContainerAttributes(en, runStyleAttributes);
 				CompleteCurrentParagraph(newParagraph);
 
@@ -235,7 +232,7 @@ namespace HtmlToOpenXml
 
 		private void ProcessFont(HtmlEnumerator en)
 		{
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>();
 			ProcessContainerAttributes(en, styleAttributes);
 
 			string attrValue = en.Attributes["size"];
@@ -243,7 +240,7 @@ namespace HtmlToOpenXml
 			{
 				Unit fontSize = Converter.ToFontSize(attrValue);
                 if (fontSize.IsFixed)
-					styleAttributes.Add(new FontSize { Val = (fontSize.ValueInPoint * 2).ToString(CultureInfo.InvariantCulture) });
+					styleAttributes.Add(new OxW.FontSize { Val = (fontSize.ValueInPoint * 2).ToString(CultureInfo.InvariantCulture) });
 			}
 
 			attrValue = en.Attributes["face"];
@@ -251,7 +248,7 @@ namespace HtmlToOpenXml
 			{
 				// Set HightAnsi. Bug fixed by xjpmauricio on github.com/onizet/html2openxml/discussions/285439
 				// where characters with accents were always using fallback font
-				styleAttributes.Add(new RunFonts { Ascii = attrValue, HighAnsi = attrValue });
+				styleAttributes.Add(new OxW.RunFonts { Ascii = attrValue, HighAnsi = attrValue });
 			}
 
 			if (styleAttributes.Count > 0)
@@ -267,18 +264,18 @@ namespace HtmlToOpenXml
 			char level = en.Current[2];
 
 			// support also style attributes for heading (in case of css override)
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>();
 			htmlStyles.Paragraph.ProcessCommonAttributes(en, styleAttributes);
 
 			AlternateProcessHtmlChunks(en, "</h" + level + ">");
 
-			Paragraph p = new Paragraph(elements);
+			OxW.Paragraph p = new OxW.Paragraph(elements);
 			p.InsertInProperties(prop =>
-				prop.ParagraphStyleId = new ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.HeadingStyle + level, StyleValues.Paragraph) });
+				prop.ParagraphStyleId = new OxW.ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.HeadingStyle + level, OxW.StyleValues.Paragraph) });
 
 			// Check if the line starts with a number format (1., 1.1., 1.1.1.)
 			// If it does, make sure we make the heading a numbered item
-			OpenXmlElement firstElement = elements.FirstOrDefault();
+			Ox.OpenXmlElement firstElement = elements.FirstOrDefault();
 			Match regexMatch = Regex.Match(firstElement.InnerText ?? string.Empty, @"(?m)^(\d+\.)*\s");
 
 			// Make sure we only grab the heading if it starts with a number
@@ -314,9 +311,9 @@ namespace HtmlToOpenXml
 			// (see Remarks: http://msdn.microsoft.com/en-us/library/documentformat.openxml.wordprocessing.bottomborder%28office.14%29.aspx)
             if (paragraphs.Count >= 2)
             {
-                OpenXmlCompositeElement previousElement = paragraphs[paragraphs.Count - 2];
+				Ox.OpenXmlCompositeElement previousElement = paragraphs[paragraphs.Count - 2];
                 bool addSpacing = false;
-                ParagraphProperties prop = previousElement.GetFirstChild<ParagraphProperties>();
+				OxW.ParagraphProperties prop = previousElement.GetFirstChild<OxW.ParagraphProperties>();
                 if (prop != null)
                 {
                     if (prop.ParagraphBorders != null && prop.ParagraphBorders.BottomBorder != null
@@ -325,31 +322,31 @@ namespace HtmlToOpenXml
                 }
                 else
                 {
-                    if (previousElement is Table)
+					if (previousElement is OxW.Table)
                         addSpacing = true;
                 }
 
                 if (addSpacing)
                 {
-                    currentParagraph.InsertInProperties(p => p.SpacingBetweenLines = new SpacingBetweenLines() { Before = "240" });
+					currentParagraph.InsertInProperties(p => p.SpacingBetweenLines = new OxW.SpacingBetweenLines() { Before = "240" });
                 }
             }
 
 			// if this paragraph has no children, it will be deleted in RemoveEmptyParagraphs()
 			// in order to kept the <hr>, we force an empty run
-            currentParagraph.Append(new Run());
+			currentParagraph.Append(new OxW.Run());
 
 			// Get style from border (only top) or use Default style 
-			TopBorder hrBorderStyle = null;
+			OxW.TopBorder hrBorderStyle = null;
 						
 			var border = en.StyleAttributes.GetAsBorder("border");
-			if (!border.IsEmpty && border.Top.IsValid)							
-				hrBorderStyle = new TopBorder { Val = border.Top.Style, Color = StringValue.FromString(border.Top.Color.ToHexString()), Size = (uint)border.Top.Width.Value };			
+			if (!border.IsEmpty && border.Top.IsValid)
+				hrBorderStyle = new OxW.TopBorder { Val = border.Top.Style, Color = Ox.StringValue.FromString(border.Top.Color.ToHexString()), Size = (uint)border.Top.Width.Value };			
 			else
-				hrBorderStyle = new TopBorder() { Val = BorderValues.Single, Size = 4U };
+				hrBorderStyle = new OxW.TopBorder() { Val = OxW.BorderValues.Single, Size = 4U };
 
 			currentParagraph.InsertInProperties(prop => 
-			prop.ParagraphBorders = new ParagraphBorders {
+			prop.ParagraphBorders = new OxW.ParagraphBorders {
 				TopBorder = hrBorderStyle
 			});
 		}
@@ -360,7 +357,7 @@ namespace HtmlToOpenXml
 
 		private void ProcessHtml(HtmlEnumerator en)
 		{
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>();
 			htmlStyles.Paragraph.ProcessCommonAttributes(en, styleAttributes);
 
 			if (styleAttributes.Count > 0)
@@ -371,7 +368,7 @@ namespace HtmlToOpenXml
 
 		#region ProcessHtmlElement
 
-		private void ProcessHtmlElement<T>(HtmlEnumerator en) where T: OpenXmlLeafElement, new()
+		private void ProcessHtmlElement<T>(HtmlEnumerator en) where T : Ox.OpenXmlLeafElement, new()
 		{
 			ProcessHtmlElement<T>(en, new T());
 		}
@@ -379,9 +376,9 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Generic handler for processing style on any Html element.
 		/// </summary>
-		private void ProcessHtmlElement<T>(HtmlEnumerator en, OpenXmlLeafElement style) where T: OpenXmlLeafElement
+		private void ProcessHtmlElement<T>(HtmlEnumerator en, Ox.OpenXmlLeafElement style) where T : Ox.OpenXmlLeafElement
 		{
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>() { style };
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>() { style };
 			ProcessContainerAttributes(en, styleAttributes);
 			htmlStyles.Runs.MergeTag(en.CurrentTag, styleAttributes);
 		}
@@ -395,16 +392,16 @@ namespace HtmlToOpenXml
 			this.CompleteCurrentParagraph(true);
 
 			currentParagraph.Append(
-					new ParagraphProperties {
-						ParagraphStyleId = new ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.CaptionStyle, StyleValues.Paragraph) },
-						KeepNext = new KeepNext()
+					new OxW.ParagraphProperties {
+						ParagraphStyleId = new OxW.ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.CaptionStyle, OxW.StyleValues.Paragraph) },
+						KeepNext = new OxW.KeepNext()
 					},
-					new Run(
-						new Text("Figure ") { Space = SpaceProcessingModeValues.Preserve }
+					new OxW.Run(
+						new OxW.Text("Figure ") { Space = Ox.SpaceProcessingModeValues.Preserve }
 					),
-					new SimpleField(
-						new Run(
-							new Text(AddFigureCaption().ToString(CultureInfo.InvariantCulture)))
+					new OxW.SimpleField(
+						new OxW.Run(
+							new OxW.Text(AddFigureCaption().ToString(CultureInfo.InvariantCulture)))
 					) { Instruction = " SEQ Figure \\* ARABIC " }
 				);
 
@@ -412,7 +409,7 @@ namespace HtmlToOpenXml
 
 			if (elements.Count > 0) // any caption?
 			{
-				Text t = (elements[0] as Run).GetFirstChild<Text>();
+				OxW.Text t = (elements[0] as OxW.Run).GetFirstChild<OxW.Text>();
 				t.Text = " " + t.InnerText; // append a space after the numero of the picture
 			}
 
@@ -425,8 +422,8 @@ namespace HtmlToOpenXml
 
 		private void ProcessImage(HtmlEnumerator en)
 		{
-			Drawing drawing = null;
-			wBorder border = new wBorder() { Val = BorderValues.None };
+			OxW.Drawing drawing = null;
+			OxW.Border border = new OxW.Border() { Val = OxW.BorderValues.None };
 			string src = en.Attributes["src"];
 			Uri uri = null;
 
@@ -465,7 +462,7 @@ namespace HtmlToOpenXml
 					var attrBorderWidth = en.Attributes.GetAsUnit("border");
 					if (attrBorderWidth.IsValid)
 					{
-						border.Val = BorderValues.Single;
+						border.Val = OxW.BorderValues.Single;
 						border.Size = (uint) attrBorderWidth.ValueInPx * 4;
 					}
 				}
@@ -475,8 +472,8 @@ namespace HtmlToOpenXml
 
 			if (drawing != null)
 			{
-				Run run = new Run(drawing);
-				if (border.Val != BorderValues.None) run.InsertInProperties(prop => prop.Border = border);
+				OxW.Run run = new OxW.Run(drawing);
+				if (border.Val != OxW.BorderValues.None) run.InsertInProperties(prop => prop.Border = border);
 				elements.Add(run);
 			}
 		}
@@ -494,13 +491,13 @@ namespace HtmlToOpenXml
 			int level = htmlStyles.NumberingList.LevelIndex;
 
 			// Save the new paragraph reference to support nested numbering list.
-			Paragraph p = currentParagraph;
+			OxW.Paragraph p = currentParagraph;
 			currentParagraph.InsertInProperties(prop => {
-				prop.ParagraphStyleId = new ParagraphStyleId() { Val = GetStyleIdForListItem(en) };
-				prop.Indentation = level < 2? null : new Indentation() { Left = (level * 780).ToString(CultureInfo.InvariantCulture) };
-				prop.NumberingProperties = new NumberingProperties {
-					NumberingLevelReference = new NumberingLevelReference() { Val = level - 1 },
-					NumberingId = new NumberingId() { Val = numberingId }
+				prop.ParagraphStyleId = new OxW.ParagraphStyleId() { Val = GetStyleIdForListItem(en) };
+				prop.Indentation = level < 2 ? null : new OxW.Indentation() { Left = (level * 780).ToString(CultureInfo.InvariantCulture) };
+				prop.NumberingProperties = new OxW.NumberingProperties {
+					NumberingLevelReference = new OxW.NumberingLevelReference() { Val = level - 1 },
+					NumberingId = new OxW.NumberingId() { Val = numberingId }
 				};
 			});
 
@@ -526,8 +523,8 @@ namespace HtmlToOpenXml
             if (classes != null) 
             { 
                 foreach (string className in classes) 
-                { 
-                    string styleId = htmlStyles.GetStyle(className, StyleValues.Paragraph, ignoreCase: true); 
+                {
+					string styleId = htmlStyles.GetStyle(className, OxW.StyleValues.Paragraph, ignoreCase: true); 
                     if (styleId != null) 
                     { 
                         return styleId; 
@@ -545,7 +542,7 @@ namespace HtmlToOpenXml
 		private void ProcessLink(HtmlEnumerator en)
 		{
 			String att = en.Attributes["href"];
-			Hyperlink h = null;
+			OxW.Hyperlink h = null;
 			Uri uri = null;
 
 
@@ -561,16 +558,16 @@ namespace HtmlToOpenXml
 					// Always accept _top anchor
 					if (!this.ExcludeLinkAnchor || att == "#_top")
 					{
-						h = new Hyperlink(
+						h = new OxW.Hyperlink(
 							) { History = true, Anchor = att.Substring(1) };
 					}
 				}
 				// ensure the links does not start with javascript:
 				else if (Uri.TryCreate(att, UriKind.Absolute, out uri) && uri.Scheme != "javascript")
 				{
-					HyperlinkRelationship extLink = mainPart.AddHyperlinkRelationship(uri, true);
+					OxP.HyperlinkRelationship extLink = mainPart.AddHyperlinkRelationship(uri, true);
 
-					h = new Hyperlink(
+					h = new OxW.Hyperlink(
 						) { History = true, Id = extLink.Id };
 				}
 			}
@@ -592,20 +589,20 @@ namespace HtmlToOpenXml
 			// Let's see whether the link tag include an image inside its body.
 			// If so, the Hyperlink OpenXmlElement is lost and we'll keep only the images
 			// and applied a HyperlinkOnClick attribute.
-			List<OpenXmlElement> imageInLink = elements.FindAll(e => { return e.HasChild<Drawing>(); });
+			List<Ox.OpenXmlElement> imageInLink = elements.FindAll(e => { return e.HasChild<OxW.Drawing>(); });
 			if (imageInLink.Count != 0)
 			{
 				for (int i = 0; i < imageInLink.Count; i++)
 				{
 					// Retrieves the "alt" attribute of the image and apply it as the link's tooltip
-					Drawing d = imageInLink[i].GetFirstChild<Drawing>();
-					var enDp = d.Descendants<pic.NonVisualDrawingProperties>().GetEnumerator();
+					OxW.Drawing d = imageInLink[i].GetFirstChild<OxW.Drawing>();
+					var enDp = d.Descendants<OxD.Pictures.NonVisualDrawingProperties>().GetEnumerator();
 					String alt;
 					if (enDp.MoveNext()) alt = enDp.Current.Description;
 					else alt = null;
 
 					d.InsertInDocProperties(
-							new a.HyperlinkOnClick() { Id = h.Id ?? h.Anchor, Tooltip = alt });
+							new OxD.HyperlinkOnClick() { Id = h.Id ?? h.Anchor, Tooltip = alt });
 				}
 			}
 
@@ -615,11 +612,11 @@ namespace HtmlToOpenXml
 			// can't use GetFirstChild<Run> or we may find the one containing the image
 			foreach (var el in h.ChildElements)
 			{
-				Run run = el as Run;
-				if (run != null && !run.HasChild<Drawing>())
+				OxW.Run run = el as OxW.Run;
+				if (run != null && !run.HasChild<OxW.Drawing>())
 				{
 					run.InsertInProperties(prop =>
-						prop.RunStyle = new RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.HyperlinkStyle, StyleValues.Character) });
+						prop.RunStyle = new OxW.RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.HyperlinkStyle, OxW.StyleValues.Character) });
 					break;
 				}
 			}
@@ -655,14 +652,14 @@ namespace HtmlToOpenXml
 
 			if (attrValue != null)
 			{
-				JustificationValues? align = Converter.ToParagraphAlign(attrValue);
+				OxW.JustificationValues? align = Converter.ToParagraphAlign(attrValue);
 				if (align.HasValue)
 				{
-					currentParagraph.InsertInProperties(prop => prop.Justification = new Justification { Val = align });
+					currentParagraph.InsertInProperties(prop => prop.Justification = new OxW.Justification { Val = align });
 				}
 			}
 
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>();
 			bool newParagraph = ProcessContainerAttributes(en, styleAttributes);
 
 			if (styleAttributes.Count > 0)
@@ -687,23 +684,23 @@ namespace HtmlToOpenXml
 			// Oftenly, <pre> tag are used to renders some code examples. They look better inside a table
             if (this.RenderPreAsTable)
             {
-                Table currentTable = new Table(
-                    new TableProperties (
-                        new TableStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.PreTableStyle, StyleValues.Table) },
-                        new TableWidth() { Type = TableWidthUnitValues.Pct, Width = "5000" } // 100% * 50
+				OxW.Table currentTable = new OxW.Table(
+					new OxW.TableProperties(
+						new OxW.TableStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.PreTableStyle, OxW.StyleValues.Table) },
+						new OxW.TableWidth() { Type = OxW.TableWidthUnitValues.Pct, Width = "5000" } // 100% * 50
 					),
-                    new TableGrid(
-                        new GridColumn() { Width = "5610" }),
-                    new TableRow(
-                        new TableCell(
+					new OxW.TableGrid(
+						new OxW.GridColumn() { Width = "5610" }),
+					new OxW.TableRow(
+						new OxW.TableCell(
                     // Ensure the border lines are visible (regardless of the style used)
-                            new TableCellProperties
+							new OxW.TableCellProperties
                             {
-                                TableCellBorders = new TableCellBorders(
-                                   new TopBorder() { Val = BorderValues.Single },
-                                   new LeftBorder() { Val = BorderValues.Single },
-                                   new BottomBorder() { Val = BorderValues.Single },
-                                   new RightBorder() { Val = BorderValues.Single })
+								TableCellBorders = new OxW.TableCellBorders(
+								   new OxW.TopBorder() { Val = OxW.BorderValues.Single },
+								   new OxW.LeftBorder() { Val = OxW.BorderValues.Single },
+								   new OxW.BottomBorder() { Val = OxW.BorderValues.Single },
+								   new OxW.RightBorder() { Val = OxW.BorderValues.Single })
                             },
                             currentParagraph))
                 );
@@ -717,7 +714,7 @@ namespace HtmlToOpenXml
             }
 
 			// Process the entire <pre> tag and append it to the document
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>();
 			ProcessContainerAttributes(en, styleAttributes);
 
 			if (styleAttributes.Count > 0)
@@ -743,14 +740,14 @@ namespace HtmlToOpenXml
 			// The browsers render the quote tag between a kind of separators.
 			// We add the Quote style to the nested runs to match more Word.
 
-			Run run = new Run(
-				new Text(" " + HtmlStyles.QuoteCharacters.Prefix) { Space = SpaceProcessingModeValues.Preserve }
+			OxW.Run run = new OxW.Run(
+				new OxW.Text(" " + HtmlStyles.QuoteCharacters.Prefix) { Space = Ox.SpaceProcessingModeValues.Preserve }
 			);
 
 			htmlStyles.Runs.ApplyTags(run);
 			elements.Add(run);
 
-			ProcessHtmlElement<RunStyle>(en, new RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.QuoteStyle, StyleValues.Character) });
+			ProcessHtmlElement<OxW.RunStyle>(en, new OxW.RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.QuoteStyle, OxW.StyleValues.Character) });
 		}
 
 		#endregion
@@ -763,7 +760,7 @@ namespace HtmlToOpenXml
 			// font family, ...
 			// We'll check for each of these and add apply them to the next build runs.
 
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>();
 			bool newParagraph = ProcessContainerAttributes(en, styleAttributes);
 
 			if (styleAttributes.Count > 0)
@@ -782,7 +779,7 @@ namespace HtmlToOpenXml
 
 		private void ProcessSubscript(HtmlEnumerator en)
 		{
-			ProcessHtmlElement<VerticalTextAlignment>(en, new VerticalTextAlignment() { Val = VerticalPositionValues.Subscript });
+			ProcessHtmlElement<OxW.VerticalTextAlignment>(en, new OxW.VerticalTextAlignment() { Val = OxW.VerticalPositionValues.Subscript });
 		}
 
 		#endregion
@@ -791,7 +788,7 @@ namespace HtmlToOpenXml
 
 		private void ProcessSuperscript(HtmlEnumerator en)
 		{
-			ProcessHtmlElement<VerticalTextAlignment>(en, new VerticalTextAlignment() { Val = VerticalPositionValues.Superscript });
+			ProcessHtmlElement<OxW.VerticalTextAlignment>(en, new OxW.VerticalTextAlignment() { Val = OxW.VerticalPositionValues.Superscript });
 		}
 
 		#endregion
@@ -800,7 +797,7 @@ namespace HtmlToOpenXml
 
 		private void ProcessUnderline(HtmlEnumerator en)
 		{
-			ProcessHtmlElement<Underline>(en, new Underline() { Val = UnderlineValues.Single });
+			ProcessHtmlElement<OxW.Underline>(en, new OxW.Underline() { Val = OxW.UnderlineValues.Single });
 		}
 
 		#endregion
@@ -809,15 +806,15 @@ namespace HtmlToOpenXml
 
 		private void ProcessTable(HtmlEnumerator en)
 		{
-			TableProperties properties = new TableProperties(
-				new TableStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.TableStyle, StyleValues.Table) }
+			OxW.TableProperties properties = new OxW.TableProperties(
+				new OxW.TableStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.TableStyle, OxW.StyleValues.Table) }
 			);
-			Table currentTable = new Table(properties);
+			OxW.Table currentTable = new OxW.Table(properties);
 
 			string classValue = en.Attributes["class"];
 			if (classValue != null)
 			{
-				classValue = htmlStyles.GetStyle(classValue, StyleValues.Table, ignoreCase: true);
+				classValue = htmlStyles.GetStyle(classValue, OxW.StyleValues.Table, ignoreCase: true);
 				if (classValue != null)
 					properties.TableStyle.Val = classValue;
 			}
@@ -829,10 +826,10 @@ namespace HtmlToOpenXml
 				if (classValue != null)
 				{
 					// check whether the style in use have borders
-                    String styleId = this.htmlStyles.GetStyle(classValue, StyleValues.Table, true);
+					String styleId = this.htmlStyles.GetStyle(classValue, OxW.StyleValues.Table, true);
 					if (styleId != null)
                     {
-                        var s = mainPart.StyleDefinitionsPart.Styles.Elements<Style>().First(e => e.StyleId == styleId);
+						var s = mainPart.StyleDefinitionsPart.Styles.Elements<OxW.Style>().First(e => e.StyleId == styleId);
                         if (s.StyleTableProperties.TableBorders != null) handleBorders = false;
                     }
 				}
@@ -842,26 +839,26 @@ namespace HtmlToOpenXml
 				if (handleBorders && properties.TableStyle.Val != htmlStyles.DefaultStyles.TableStyle)
 				{
 					uint borderSize = border.Value > 1? (uint) new Unit(UnitMetric.Pixel, border.Value).ValueInDxa : 1;
-					properties.TableBorders = new TableBorders() {
-						TopBorder = new TopBorder { Val = BorderValues.None },
-						LeftBorder = new LeftBorder { Val = BorderValues.None },
-						RightBorder = new RightBorder { Val = BorderValues.None },
-						BottomBorder = new BottomBorder { Val = BorderValues.None },
-						InsideHorizontalBorder = new InsideHorizontalBorder { Val = BorderValues.Single, Size = borderSize },
-						InsideVerticalBorder = new InsideVerticalBorder { Val = BorderValues.Single, Size = borderSize }
+					properties.TableBorders = new OxW.TableBorders() {
+						TopBorder = new OxW.TopBorder { Val = OxW.BorderValues.None },
+						LeftBorder = new OxW.LeftBorder { Val = OxW.BorderValues.None },
+						RightBorder = new OxW.RightBorder { Val = OxW.BorderValues.None },
+						BottomBorder = new OxW.BottomBorder { Val = OxW.BorderValues.None },
+						InsideHorizontalBorder = new OxW.InsideHorizontalBorder { Val = OxW.BorderValues.Single, Size = borderSize },
+						InsideVerticalBorder = new OxW.InsideVerticalBorder { Val = OxW.BorderValues.Single, Size = borderSize }
 					};
 				}
 			}
 			// is the border=0? If so, we remove the border regardless the style in use
 			else if (border == 0)
 			{
-				properties.TableBorders = new TableBorders() {
-					TopBorder = new TopBorder { Val = BorderValues.None },
-					LeftBorder = new LeftBorder { Val = BorderValues.None },
-					RightBorder = new RightBorder { Val = BorderValues.None },
-					BottomBorder = new BottomBorder { Val = BorderValues.None },
-					InsideHorizontalBorder = new InsideHorizontalBorder { Val = BorderValues.None },
-					InsideVerticalBorder = new InsideVerticalBorder { Val = BorderValues.None }
+				properties.TableBorders = new OxW.TableBorders() {
+					TopBorder = new OxW.TopBorder { Val = OxW.BorderValues.None },
+					LeftBorder = new OxW.LeftBorder { Val = OxW.BorderValues.None },
+					RightBorder = new OxW.RightBorder { Val = OxW.BorderValues.None },
+					BottomBorder = new OxW.BottomBorder { Val = OxW.BorderValues.None },
+					InsideHorizontalBorder = new OxW.InsideHorizontalBorder { Val = OxW.BorderValues.None },
+					InsideVerticalBorder = new OxW.InsideVerticalBorder { Val = OxW.BorderValues.None }
 				};
 			}
 			else
@@ -869,16 +866,16 @@ namespace HtmlToOpenXml
 				var styleBorder = en.StyleAttributes.GetAsBorder("border");
 				if (!styleBorder.IsEmpty)
 				{
-					properties.TableBorders = new TableBorders();
+					properties.TableBorders = new OxW.TableBorders();
 
 					if (styleBorder.Left.IsValid)
-						properties.TableBorders.LeftBorder = new LeftBorder { Val = styleBorder.Left.Style, Color = StringValue.FromString(styleBorder.Left.Color.ToHexString()), Size = (uint)styleBorder.Left.Width.ValueInDxa };
+						properties.TableBorders.LeftBorder = new OxW.LeftBorder { Val = styleBorder.Left.Style, Color = Ox.StringValue.FromString(styleBorder.Left.Color.ToHexString()), Size = (uint)styleBorder.Left.Width.ValueInDxa };
 					if (styleBorder.Right.IsValid)
-						properties.TableBorders.RightBorder = new RightBorder { Val = styleBorder.Right.Style, Color = StringValue.FromString(styleBorder.Right.Color.ToHexString()), Size = (uint)styleBorder.Right.Width.ValueInDxa };
+						properties.TableBorders.RightBorder = new OxW.RightBorder { Val = styleBorder.Right.Style, Color = Ox.StringValue.FromString(styleBorder.Right.Color.ToHexString()), Size = (uint)styleBorder.Right.Width.ValueInDxa };
 					if (styleBorder.Top.IsValid)
-						properties.TableBorders.TopBorder = new TopBorder { Val = styleBorder.Top.Style, Color = StringValue.FromString(styleBorder.Top.Color.ToHexString()), Size = (uint)styleBorder.Top.Width.ValueInDxa };
+						properties.TableBorders.TopBorder = new OxW.TopBorder { Val = styleBorder.Top.Style, Color = Ox.StringValue.FromString(styleBorder.Top.Color.ToHexString()), Size = (uint)styleBorder.Top.Width.ValueInDxa };
 					if (styleBorder.Bottom.IsValid)
-						properties.TableBorders.BottomBorder = new BottomBorder { Val = styleBorder.Bottom.Style, Color = StringValue.FromString(styleBorder.Bottom.Color.ToHexString()), Size = (uint)styleBorder.Bottom.Width.ValueInDxa };
+						properties.TableBorders.BottomBorder = new OxW.BottomBorder { Val = styleBorder.Bottom.Style, Color = Ox.StringValue.FromString(styleBorder.Bottom.Color.ToHexString()), Size = (uint)styleBorder.Bottom.Width.ValueInDxa };
 				}
 			}			
 
@@ -890,26 +887,26 @@ namespace HtmlToOpenXml
 				switch (unit.Type)
 				{
 					case UnitMetric.Percent:
-						properties.TableWidth = new TableWidth() { Type = TableWidthUnitValues.Pct, Width = (unit.Value * 50).ToString(CultureInfo.InvariantCulture) }; break;
+						properties.TableWidth = new OxW.TableWidth() { Type = OxW.TableWidthUnitValues.Pct, Width = (unit.Value * 50).ToString(CultureInfo.InvariantCulture) }; break;
 					case UnitMetric.Point:
-						properties.TableWidth = new TableWidth() { Type = TableWidthUnitValues.Dxa, Width = unit.ValueInDxa.ToString(CultureInfo.InvariantCulture) }; break;
+						properties.TableWidth = new OxW.TableWidth() { Type = OxW.TableWidthUnitValues.Dxa, Width = unit.ValueInDxa.ToString(CultureInfo.InvariantCulture) }; break;
 					case UnitMetric.Pixel:
-						properties.TableWidth = new TableWidth() { Type = TableWidthUnitValues.Dxa, Width = unit.ValueInDxa.ToString(CultureInfo.InvariantCulture) }; break;
+						properties.TableWidth = new OxW.TableWidth() { Type = OxW.TableWidthUnitValues.Dxa, Width = unit.ValueInDxa.ToString(CultureInfo.InvariantCulture) }; break;
 				}
 			}
 			else
 			{
 				// Use Auto=0 instead of Pct=auto
 				// bug reported by scarhand (https://html2openxml.codeplex.com/workitem/12494)
-				properties.TableWidth = new TableWidth() { Type = TableWidthUnitValues.Auto, Width = "0" };
+				properties.TableWidth = new OxW.TableWidth() { Type = OxW.TableWidthUnitValues.Auto, Width = "0" };
 			}
 
 			string align = en.Attributes["align"];
 			if (align != null)
 			{
-				JustificationValues? halign = Converter.ToParagraphAlign(align);
+				OxW.JustificationValues? halign = Converter.ToParagraphAlign(align);
 				if (halign.HasValue)
-					properties.TableJustification = new TableJustification() { Val = halign.Value.ToTableRowAlignment() };
+					properties.TableJustification = new OxW.TableJustification() { Val = halign.Value.ToTableRowAlignment() };
 			}
 
 			// only if the table is left aligned, we can handle some left margin indentation
@@ -921,29 +918,29 @@ namespace HtmlToOpenXml
 				// OpenXml doesn't support table margin in Percent, but Html does
 				// the margin part has been implemented by Olek (patch #8457)
 
-				TableCellMarginDefault cellMargin = new TableCellMarginDefault();
+				OxW.TableCellMarginDefault cellMargin = new OxW.TableCellMarginDefault();
                 if (margin.Left.IsFixed)
-					cellMargin.TableCellLeftMargin = new TableCellLeftMargin() { Type = TableWidthValues.Dxa, Width = (short) margin.Left.ValueInDxa };
+					cellMargin.TableCellLeftMargin = new OxW.TableCellLeftMargin() { Type = OxW.TableWidthValues.Dxa, Width = (short)margin.Left.ValueInDxa };
                 if (margin.Right.IsFixed)
-					cellMargin.TableCellRightMargin = new TableCellRightMargin() { Type = TableWidthValues.Dxa, Width = (short) margin.Right.ValueInDxa };
+					cellMargin.TableCellRightMargin = new OxW.TableCellRightMargin() { Type = OxW.TableWidthValues.Dxa, Width = (short)margin.Right.ValueInDxa };
                 if (margin.Top.IsFixed)
-					cellMargin.TopMargin = new TopMargin() { Type = TableWidthUnitValues.Dxa, Width = margin.Top.ValueInDxa.ToString(CultureInfo.InvariantCulture) };
+					cellMargin.TopMargin = new OxW.TopMargin() { Type = OxW.TableWidthUnitValues.Dxa, Width = margin.Top.ValueInDxa.ToString(CultureInfo.InvariantCulture) };
                 if (margin.Bottom.IsFixed)
-					cellMargin.BottomMargin = new BottomMargin() { Type = TableWidthUnitValues.Dxa, Width = margin.Bottom.ValueInDxa.ToString(CultureInfo.InvariantCulture) };
+					cellMargin.BottomMargin = new OxW.BottomMargin() { Type = OxW.TableWidthUnitValues.Dxa, Width = margin.Bottom.ValueInDxa.ToString(CultureInfo.InvariantCulture) };
 
                 // Align table according to the margin 'auto' as it stands in Html
                 if (margin.Left.Type == UnitMetric.Auto || margin.Right.Type == UnitMetric.Auto)
                 {
-                    TableRowAlignmentValues justification;
+					OxW.TableRowAlignmentValues justification;
 
                     if (margin.Left.Type == UnitMetric.Auto && margin.Right.Type == UnitMetric.Auto)
-                        justification = TableRowAlignmentValues.Center;
+						justification = OxW.TableRowAlignmentValues.Center;
                     else if (margin.Left.Type == UnitMetric.Auto)
-                        justification = TableRowAlignmentValues.Right;
+						justification = OxW.TableRowAlignmentValues.Right;
                     else
-                        justification = TableRowAlignmentValues.Left;
+						justification = OxW.TableRowAlignmentValues.Left;
 
-                    properties.TableJustification = new TableJustification() { Val = justification };
+					properties.TableJustification = new OxW.TableJustification() { Val = justification };
                 }
 
 				if (cellMargin.HasChildren)
@@ -952,22 +949,22 @@ namespace HtmlToOpenXml
 
 			int? spacing = en.Attributes.GetAsInt("cellspacing");
 			if (spacing.HasValue)
-                properties.TableCellSpacing = new TableCellSpacing { Type = TableWidthUnitValues.Dxa, Width = new Unit(UnitMetric.Pixel, spacing.Value).ValueInDxa.ToString(CultureInfo.InvariantCulture) };
+				properties.TableCellSpacing = new OxW.TableCellSpacing { Type = OxW.TableWidthUnitValues.Dxa, Width = new Unit(UnitMetric.Pixel, spacing.Value).ValueInDxa.ToString(CultureInfo.InvariantCulture) };
 
 			int? padding = en.Attributes.GetAsInt("cellpadding");
             if (padding.HasValue)
             {
                 int paddingDxa = (int) new Unit(UnitMetric.Pixel, padding.Value).ValueInDxa;
 
-                TableCellMarginDefault cellMargin = new TableCellMarginDefault();
-                cellMargin.TableCellLeftMargin = new TableCellLeftMargin() { Type = TableWidthValues.Dxa, Width = (short) paddingDxa };
-                cellMargin.TableCellRightMargin = new TableCellRightMargin() { Type = TableWidthValues.Dxa, Width = (short) paddingDxa };
-                cellMargin.TopMargin = new TopMargin() { Type = TableWidthUnitValues.Dxa, Width = paddingDxa.ToString(CultureInfo.InvariantCulture) };
-                cellMargin.BottomMargin = new BottomMargin() { Type = TableWidthUnitValues.Dxa, Width = paddingDxa.ToString(CultureInfo.InvariantCulture) };
+				OxW.TableCellMarginDefault cellMargin = new OxW.TableCellMarginDefault();
+				cellMargin.TableCellLeftMargin = new OxW.TableCellLeftMargin() { Type = OxW.TableWidthValues.Dxa, Width = (short)paddingDxa };
+				cellMargin.TableCellRightMargin = new OxW.TableCellRightMargin() { Type = OxW.TableWidthValues.Dxa, Width = (short)paddingDxa };
+				cellMargin.TopMargin = new OxW.TopMargin() { Type = OxW.TableWidthUnitValues.Dxa, Width = paddingDxa.ToString(CultureInfo.InvariantCulture) };
+				cellMargin.BottomMargin = new OxW.BottomMargin() { Type = OxW.TableWidthUnitValues.Dxa, Width = paddingDxa.ToString(CultureInfo.InvariantCulture) };
                 properties.TableCellMarginDefault = cellMargin;
             }
 
-			List<OpenXmlElement> runStyleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> runStyleAttributes = new List<Ox.OpenXmlElement>();
 			htmlStyles.Tables.ProcessCommonAttributes(en, runStyleAttributes);
 			if (runStyleAttributes.Count > 0)
 				htmlStyles.Runs.BeginTag(en.CurrentTag, runStyleAttributes.ToArray());
@@ -976,14 +973,14 @@ namespace HtmlToOpenXml
 			// are we currently inside another table?
 			if (tables.HasContext)
 			{
-				// Okay we will insert nested table but beware the paragraph inside TableCell should contains at least 1 run.
+				// Okay we will insert nested table but beware the paragraph inside OxW.TableCell should contains at least 1 run.
 
-				TableCell currentCell = tables.CurrentTable.GetLastChild<TableRow>().GetLastChild<TableCell>();
+				OxW.TableCell currentCell = tables.CurrentTable.GetLastChild<OxW.TableRow>().GetLastChild<OxW.TableCell>();
 				// don't add an empty paragraph if not required (bug #13608 by zanjo)
 				if (elements.Count == 0) currentCell.Append(currentTable);
 				else
 				{
-					currentCell.Append(new Paragraph(elements), currentTable);
+					currentCell.Append(new OxW.Paragraph(elements), currentTable);
 					elements.Clear();
 				}
 			}
@@ -1009,40 +1006,40 @@ namespace HtmlToOpenXml
 
 			ProcessHtmlChunks(en, "</caption>");
 
-			var legend = new Paragraph(
-					new ParagraphProperties {
-						ParagraphStyleId = new ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.CaptionStyle, StyleValues.Paragraph) }
+			var legend = new OxW.Paragraph(
+					new OxW.ParagraphProperties {
+						ParagraphStyleId = new OxW.ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.CaptionStyle, OxW.StyleValues.Paragraph) }
 					},
-					new Run(
-						new FieldChar() { FieldCharType = FieldCharValues.Begin }),
-					new Run(
-						new FieldCode(" SEQ TABLE \\* ARABIC ") { Space = SpaceProcessingModeValues.Preserve }),
-					new Run(
-						new FieldChar() { FieldCharType = FieldCharValues.End })
+					new OxW.Run(
+						new OxW.FieldChar() { FieldCharType = OxW.FieldCharValues.Begin }),
+					new OxW.Run(
+						new OxW.FieldCode(" SEQ TABLE \\* ARABIC ") { Space = Ox.SpaceProcessingModeValues.Preserve }),
+					new OxW.Run(
+						new OxW.FieldChar() { FieldCharType = OxW.FieldCharValues.End })
 				);
 			legend.Append(elements);
 			elements.Clear();
 
 			if (att != null)
 			{
-				JustificationValues? align = Converter.ToParagraphAlign(att);
+				OxW.JustificationValues? align = Converter.ToParagraphAlign(att);
 				if (align.HasValue)
-					legend.InsertInProperties(prop => prop.Justification = new Justification { Val = align } );
+					legend.InsertInProperties(prop => prop.Justification = new OxW.Justification { Val = align });
 			}
 			else
 			{
 				// If no particular alignement has been specified for the legend, we will align the legend
 				// relative to the owning table
-				TableProperties props = tables.CurrentTable.GetFirstChild<TableProperties>();
+				OxW.TableProperties props = tables.CurrentTable.GetFirstChild<OxW.TableProperties>();
 				if (props != null)
 				{
-					TableJustification justif = props.GetFirstChild<TableJustification>();
+					OxW.TableJustification justif = props.GetFirstChild<OxW.TableJustification>();
 					if (justif != null) legend.InsertInProperties(prop =>
-						prop.Justification = new Justification { Val = justif.Val.Value.ToJustification() });
+						prop.Justification = new OxW.Justification { Val = justif.Val.Value.ToJustification() });
 				}
 			}
 
-			if (this.TableCaptionPosition == CaptionPositionValues.Above)
+			if (this.TableCaptionPosition == OxW.CaptionPositionValues.Above)
 				this.paragraphs.Insert(this.paragraphs.Count - 1, legend);
 			else
 				this.paragraphs.Add(legend);
@@ -1058,8 +1055,8 @@ namespace HtmlToOpenXml
 			// a table context exists.
 			if (!tables.HasContext) return;
 
-			TableRowProperties properties = new TableRowProperties();
-			List<OpenXmlElement> runStyleAttributes = new List<OpenXmlElement>();
+			OxW.TableRowProperties properties = new OxW.TableRowProperties();
+			List<Ox.OpenXmlElement> runStyleAttributes = new List<Ox.OpenXmlElement>();
 
 			htmlStyles.Tables.ProcessCommonAttributes(en, runStyleAttributes);
 
@@ -1069,17 +1066,17 @@ namespace HtmlToOpenXml
 			switch (unit.Type)
 			{
 				case UnitMetric.Point:
-					properties.AddChild(new TableRowHeight() { HeightType = HeightRuleValues.AtLeast, Val = (uint) (unit.Value * 20) });
+					properties.AddChild(new OxW.TableRowHeight() { HeightType = OxW.HeightRuleValues.AtLeast, Val = (uint)(unit.Value * 20) });
 					break;
 				case UnitMetric.Pixel:
-					properties.AddChild(new TableRowHeight() { HeightType = HeightRuleValues.AtLeast, Val = (uint) unit.ValueInDxa });
+					properties.AddChild(new OxW.TableRowHeight() { HeightType = OxW.HeightRuleValues.AtLeast, Val = (uint)unit.ValueInDxa });
 					break;
 			}
 
 			// Do not explicitly set the tablecell spacing in order to inherit table style (issue 107)
 			//properties.AddChild(new TableCellSpacing() { Type = TableWidthUnitValues.Dxa, Width = "0" });
 
-			TableRow row = new TableRow();
+			OxW.TableRow row = new OxW.TableRow();
 			row.TableRowProperties = properties;
 
 			htmlStyles.Runs.ProcessCommonAttributes(en, runStyleAttributes);
@@ -1098,12 +1095,12 @@ namespace HtmlToOpenXml
 		{
 			if (!tables.HasContext) return;
 
-			TableCellProperties properties = new TableCellProperties();
+			OxW.TableCellProperties properties = new OxW.TableCellProperties();
             // in Html, table cell are vertically centered by default
-            properties.TableCellVerticalAlignment = new TableCellVerticalAlignment() { Val = TableVerticalAlignmentValues.Center };
+            properties.TableCellVerticalAlignment = new OxW.TableCellVerticalAlignment() { Val = OxW.TableVerticalAlignmentValues.Center };
 
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>();
-			List<OpenXmlElement> runStyleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>();
+			List<Ox.OpenXmlElement> runStyleAttributes = new List<Ox.OpenXmlElement>();
 
 			Unit unit = en.StyleAttributes.GetAsUnit("width");
 			if (!unit.IsValid) unit = en.Attributes.GetAsUnit("width");
@@ -1115,14 +1112,14 @@ namespace HtmlToOpenXml
             switch (unit.Type)
 			{
 				case UnitMetric.Percent:
-                    properties.TableCellWidth = new TableCellWidth() { Type = TableWidthUnitValues.Pct, Width = (unit.Value * 50).ToString(CultureInfo.InvariantCulture) };
+					properties.TableCellWidth = new OxW.TableCellWidth() { Type = OxW.TableWidthUnitValues.Pct, Width = (unit.Value * 50).ToString(CultureInfo.InvariantCulture) };
 					break;
 				case UnitMetric.Point:
                     // unit.ValueInPoint used instead of ValueInDxa
-                    properties.TableCellWidth = new TableCellWidth() { Type = TableWidthUnitValues.Auto, Width = (unit.ValueInPoint * 20).ToString(CultureInfo.InvariantCulture) };
+					properties.TableCellWidth = new OxW.TableCellWidth() { Type = OxW.TableWidthUnitValues.Auto, Width = (unit.ValueInPoint * 20).ToString(CultureInfo.InvariantCulture) };
 					break;
 				case UnitMetric.Pixel:
-					properties.TableCellWidth = new TableCellWidth() { Type = TableWidthUnitValues.Dxa, Width = (unit.ValueInDxa).ToString(CultureInfo.InvariantCulture) };
+					properties.TableCellWidth = new OxW.TableCellWidth() { Type = OxW.TableWidthUnitValues.Dxa, Width = (unit.ValueInDxa).ToString(CultureInfo.InvariantCulture) };
 					break;
 			}
 
@@ -1130,13 +1127,13 @@ namespace HtmlToOpenXml
 			int? colspan = en.Attributes.GetAsInt("colspan");
 			if (colspan.HasValue && colspan.Value > 1)
 			{
-				properties.GridSpan = new GridSpan() { Val = colspan };
+				properties.GridSpan = new OxW.GridSpan() { Val = colspan };
 			}
 
 			int? rowspan = en.Attributes.GetAsInt("rowspan");
 			if (rowspan.HasValue && rowspan.Value > 1)
 			{
-				properties.VerticalMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
+				properties.VerticalMerge = new OxW.VerticalMerge() { Val = OxW.MergedCellValues.Restart };
 
 				var p = tables.CellPosition;
                 int shift = 0;
@@ -1158,14 +1155,14 @@ namespace HtmlToOpenXml
 				switch (direction)
 				{
 					case "tb-lr":
-						properties.TextDirection = new TextDirection() { Val = TextDirectionValues.BottomToTopLeftToRight };
-						properties.TableCellVerticalAlignment = new TableCellVerticalAlignment() { Val = TableVerticalAlignmentValues.Center };
-						htmlStyles.Tables.BeginTagForParagraph(en.CurrentTag, new Justification() { Val = JustificationValues.Center });
+						properties.TextDirection = new OxW.TextDirection() { Val = OxW.TextDirectionValues.BottomToTopLeftToRight };
+						properties.TableCellVerticalAlignment = new OxW.TableCellVerticalAlignment() { Val = OxW.TableVerticalAlignmentValues.Center };
+						htmlStyles.Tables.BeginTagForParagraph(en.CurrentTag, new OxW.Justification() { Val = OxW.JustificationValues.Center });
 						break;
 					case "tb-rl":
-						properties.TextDirection = new TextDirection() { Val = TextDirectionValues.TopToBottomRightToLeft };
-						properties.TableCellVerticalAlignment = new TableCellVerticalAlignment() { Val = TableVerticalAlignmentValues.Center };
-						htmlStyles.Tables.BeginTagForParagraph(en.CurrentTag, new Justification() { Val = JustificationValues.Center });
+						properties.TextDirection = new OxW.TextDirection() { Val = OxW.TextDirectionValues.TopToBottomRightToLeft };
+						properties.TableCellVerticalAlignment = new OxW.TableCellVerticalAlignment() { Val = OxW.TableVerticalAlignmentValues.Center };
+						htmlStyles.Tables.BeginTagForParagraph(en.CurrentTag, new OxW.Justification() { Val = OxW.JustificationValues.Center });
 						break;
 				}
 			}
@@ -1173,12 +1170,12 @@ namespace HtmlToOpenXml
 			var padding = en.StyleAttributes.GetAsMargin("padding");
 			if (!padding.IsEmpty)
 			{
-				TableCellMargin cellMargin = new TableCellMargin();
-				var cellMarginSide = new List<KeyValuePair<Unit, TableWidthType>>();
-				cellMarginSide.Add(new KeyValuePair<Unit, TableWidthType>(padding.Top, new TopMargin()));
-				cellMarginSide.Add(new KeyValuePair<Unit, TableWidthType>(padding.Left, new LeftMargin()));
-				cellMarginSide.Add(new KeyValuePair<Unit, TableWidthType>(padding.Bottom, new BottomMargin()));
-				cellMarginSide.Add(new KeyValuePair<Unit, TableWidthType>(padding.Right, new RightMargin()));
+				OxW.TableCellMargin cellMargin = new OxW.TableCellMargin();
+				var cellMarginSide = new List<KeyValuePair<Unit, OxW.TableWidthType>>();
+				cellMarginSide.Add(new KeyValuePair<Unit, OxW.TableWidthType>(padding.Top, new OxW.TopMargin()));
+				cellMarginSide.Add(new KeyValuePair<Unit, OxW.TableWidthType>(padding.Left, new OxW.LeftMargin()));
+				cellMarginSide.Add(new KeyValuePair<Unit, OxW.TableWidthType>(padding.Bottom, new OxW.BottomMargin()));
+				cellMarginSide.Add(new KeyValuePair<Unit, OxW.TableWidthType>(padding.Right, new OxW.RightMargin()));
 
 				foreach (var pair in cellMarginSide)
 				{
@@ -1186,12 +1183,12 @@ namespace HtmlToOpenXml
 					if (pair.Key.Type == UnitMetric.Percent)
 					{
 						pair.Value.Width = (pair.Key.Value * 50).ToString(CultureInfo.InvariantCulture);
-						pair.Value.Type = TableWidthUnitValues.Pct;
+						pair.Value.Type = OxW.TableWidthUnitValues.Pct;
 					}
 					else
 					{
 						pair.Value.Width = pair.Key.ValueInDxa.ToString(CultureInfo.InvariantCulture);
-						pair.Value.Type = TableWidthUnitValues.Dxa;
+						pair.Value.Type = OxW.TableWidthUnitValues.Dxa;
 					}
 
 					cellMargin.AddChild(pair.Value);
@@ -1203,16 +1200,16 @@ namespace HtmlToOpenXml
 			var border = en.StyleAttributes.GetAsBorder("border");
 			if (!border.IsEmpty)
 			{
-				properties.TableCellBorders = new TableCellBorders();
+				properties.TableCellBorders = new OxW.TableCellBorders();
 
 				if (border.Left.IsValid)
-					properties.TableCellBorders.LeftBorder = new LeftBorder { Val = border.Left.Style, Color = StringValue.FromString(border.Left.Color.ToHexString()), Size = (uint)border.Left.Width.ValueInDxa };
+					properties.TableCellBorders.LeftBorder = new OxW.LeftBorder { Val = border.Left.Style, Color = Ox.StringValue.FromString(border.Left.Color.ToHexString()), Size = (uint)border.Left.Width.ValueInDxa };
 				if (border.Right.IsValid)
-					properties.TableCellBorders.RightBorder = new RightBorder { Val = border.Right.Style, Color = StringValue.FromString(border.Right.Color.ToHexString()), Size = (uint)border.Right.Width.ValueInDxa };
+					properties.TableCellBorders.RightBorder = new OxW.RightBorder { Val = border.Right.Style, Color = Ox.StringValue.FromString(border.Right.Color.ToHexString()), Size = (uint)border.Right.Width.ValueInDxa };
 				if (border.Top.IsValid)
-					properties.TableCellBorders.TopBorder = new TopBorder { Val = border.Top.Style, Color = StringValue.FromString(border.Top.Color.ToHexString()), Size = (uint)border.Top.Width.ValueInDxa };
+					properties.TableCellBorders.TopBorder = new OxW.TopBorder { Val = border.Top.Style, Color = Ox.StringValue.FromString(border.Top.Color.ToHexString()), Size = (uint)border.Top.Width.ValueInDxa };
 				if (border.Bottom.IsValid)
-					properties.TableCellBorders.BottomBorder = new BottomBorder { Val = border.Bottom.Style, Color = StringValue.FromString(border.Bottom.Color.ToHexString()), Size = (uint)border.Bottom.Width.ValueInDxa };
+					properties.TableCellBorders.BottomBorder = new OxW.BottomBorder { Val = border.Bottom.Style, Color = Ox.StringValue.FromString(border.Bottom.Color.ToHexString()), Size = (uint)border.Bottom.Width.ValueInDxa };
 			}
 
 			htmlStyles.Tables.ProcessCommonAttributes(en, runStyleAttributes);
@@ -1221,20 +1218,20 @@ namespace HtmlToOpenXml
 			if (runStyleAttributes.Count > 0)
 				htmlStyles.Runs.BeginTag(en.CurrentTag, runStyleAttributes.ToArray());
 
-			TableCell cell = new TableCell();
+			OxW.TableCell cell = new OxW.TableCell();
 			if (properties.HasChildren) cell.TableCellProperties = properties;
                   
             // The heightUnit value used to append a height to the TableRowHeight.
-            var row = tables.CurrentTable.GetLastChild<TableRow>();
+            var row = tables.CurrentTable.GetLastChild<OxW.TableRow>();
 
             switch (heightUnit.Type)
             {
                 case UnitMetric.Point:
-                    row.TableRowProperties.AddChild(new TableRowHeight() { HeightType = HeightRuleValues.AtLeast, Val = (uint)(heightUnit.Value * 20) });
+					row.TableRowProperties.AddChild(new OxW.TableRowHeight() { HeightType = OxW.HeightRuleValues.AtLeast, Val = (uint)(heightUnit.Value * 20) });
 
                     break;
                 case UnitMetric.Pixel:
-					row.TableRowProperties.AddChild(new TableRowHeight() { HeightType = HeightRuleValues.AtLeast, Val = (uint)heightUnit.ValueInDxa });
+					row.TableRowProperties.AddChild(new OxW.TableRowHeight() { HeightType = OxW.HeightRuleValues.AtLeast, Val = (uint)heightUnit.ValueInDxa });
                     break;
             }
 
@@ -1244,8 +1241,8 @@ namespace HtmlToOpenXml
 				ProcessClosingTableColumn(en);
 			else
 			{
-				// we create a new currentParagraph to add new runs inside the TableCell
-				cell.Append(currentParagraph = new Paragraph());
+				// we create a new currentParagraph to add new runs inside the OxW.TableCell
+				cell.Append(currentParagraph = new OxW.Paragraph());
 			}
 		}
 
@@ -1255,7 +1252,7 @@ namespace HtmlToOpenXml
 
 		private void ProcessTablePart(HtmlEnumerator en)
 		{
-			List<OpenXmlElement> styleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> styleAttributes = new List<Ox.OpenXmlElement>();
 
 			htmlStyles.Tables.ProcessCommonAttributes(en, styleAttributes);
 
@@ -1357,8 +1354,8 @@ namespace HtmlToOpenXml
 
 		private void ProcessClosingQuote(HtmlEnumerator en)
 		{
-			Run run = new Run(
-				new Text(HtmlStyles.QuoteCharacters.Suffix) { Space = SpaceProcessingModeValues.Preserve }
+			OxW.Run run = new OxW.Run(
+				new OxW.Text(HtmlStyles.QuoteCharacters.Suffix) { Space = Ox.SpaceProcessingModeValues.Preserve }
 			);
 			htmlStyles.Runs.ApplyTags(run);
 			elements.Add(run);
@@ -1375,22 +1372,22 @@ namespace HtmlToOpenXml
 			htmlStyles.Tables.EndTag("<table>");
 			htmlStyles.Runs.EndTag("<table>");
 
-			TableRow row = tables.CurrentTable.GetFirstChild<TableRow>();
+			OxW.TableRow row = tables.CurrentTable.GetFirstChild<OxW.TableRow>();
 			// Is this a misformed or empty table?
 			if (row != null)
 			{
 				// Count the number of tableCell and add as much GridColumn as we need.
-				TableGrid grid = new TableGrid();
-				foreach (TableCell cell in row.Elements<TableCell>())
+				OxW.TableGrid grid = new OxW.TableGrid();
+				foreach (OxW.TableCell cell in row.Elements<OxW.TableCell>())
 				{
 					// If that column contains some span, we need to count them also
 					int count = cell.TableCellProperties.GridSpan != null ? cell.TableCellProperties.GridSpan.Val.Value : 1;
 					for (int i=0; i<count; i++) {
-						grid.Append(new GridColumn());
+						grid.Append(new OxW.GridColumn());
 					}
 				}
 
-				tables.CurrentTable.InsertAt<TableGrid>(grid, 1);
+				tables.CurrentTable.InsertAt<OxW.TableGrid>(grid, 1);
 			}
 
 			tables.CloseContext();
@@ -1417,11 +1414,11 @@ namespace HtmlToOpenXml
 		private void ProcessClosingTableRow(HtmlEnumerator en)
 		{
 			if (!tables.HasContext) return;
-			TableRow row = tables.CurrentTable.GetLastChild<TableRow>();
+			OxW.TableRow row = tables.CurrentTable.GetLastChild<OxW.TableRow>();
 			if (row == null) return;
 
 			// Word will not open documents with empty rows (reported by scwebgroup)
-			if (row.GetFirstChild<TableCell>() == null)
+			if (row.GetFirstChild<OxW.TableCell>() == null)
 			{
 				row.Remove();
 				return;
@@ -1437,18 +1434,18 @@ namespace HtmlToOpenXml
 					HtmlTableSpan tspan = tables.RowSpan[i];
 					if (tspan.CellOrigin.Row == rowIndex) continue;
 
-                    TableCell emptyCell = new TableCell(new TableCellProperties {
-								            TableCellWidth = new TableCellWidth() { Width = "0" },
-								            VerticalMerge = new VerticalMerge() },
-							            new Paragraph());
+                    OxW.TableCell emptyCell = new OxW.TableCell(new OxW.TableCellProperties {
+								            TableCellWidth = new OxW.TableCellWidth() { Width = "0" },
+								            VerticalMerge = new OxW.VerticalMerge() },
+										new OxW.Paragraph());
 
                     tspan.RowSpan--;
                     if (tspan.RowSpan == 0) { tables.RowSpan.RemoveAt(i); i--; }
 
                     // in case of both colSpan + rowSpan on the same cell, we have to reverberate the rowSpan on the next columns too
-                    if (tspan.ColSpan > 0) emptyCell.TableCellProperties.GridSpan = new GridSpan() { Val = tspan.ColSpan };
+					if (tspan.ColSpan > 0) emptyCell.TableCellProperties.GridSpan = new OxW.GridSpan() { Val = tspan.ColSpan };
 
-                    TableCell cell = row.GetFirstChild<TableCell>();
+                    OxW.TableCell cell = row.GetFirstChild<OxW.TableCell>();
                     if (tspan.CellOrigin.Column == 0 || cell == null)
                     {
 						row.InsertAfter(emptyCell, row.TableRowProperties);
@@ -1461,10 +1458,10 @@ namespace HtmlToOpenXml
                     {
                         columnIndex += cell.TableCellProperties.GridSpan.Val ?? 1;
                     }
-                    //while ((cell = cell.NextSibling<TableCell>()) != null);
+                    //while ((cell = cell.NextSibling<OxW.TableCell>()) != null);
 
                     if (cell == null) row.AppendChild(emptyCell);
-                    else row.InsertAfter<TableCell>(emptyCell, cell);
+                    else row.InsertAfter<OxW.TableCell>(emptyCell, cell);
                 }
 			}
 
@@ -1482,12 +1479,12 @@ namespace HtmlToOpenXml
 			{
 				// When the Html is bad-formed and doesn't contain <table>, the browser renders the column separated by a space.
 				// So we do the same here
-				Run run = new Run(new Text(" ") { Space = SpaceProcessingModeValues.Preserve });
+				OxW.Run run = new OxW.Run(new OxW.Text(" ") { Space = Ox.SpaceProcessingModeValues.Preserve });
 				htmlStyles.Runs.ApplyTags(run);
 				elements.Add(run);
 				return;
 			}
-			TableCell cell = tables.CurrentTable.GetLastChild<TableRow>().GetLastChild<TableCell>();
+			OxW.TableCell cell = tables.CurrentTable.GetLastChild<OxW.TableRow>().GetLastChild<OxW.TableCell>();
 
 			// As we add automatically a paragraph to the cell once we create it, we'll remove it if finally, it was not used.
 			// For all the other children, we will ensure there is no more empty paragraphs (similarly to what we do at the end
@@ -1495,16 +1492,16 @@ namespace HtmlToOpenXml
 			// use a basic loop instead of foreach to allow removal (bug reported by antgraf)
 			for (int i=0; i<cell.ChildElements.Count; )
 			{
-				Paragraph p = cell.ChildElements[i] as Paragraph;
+				OxW.Paragraph p = cell.ChildElements[i] as OxW.Paragraph;
 				// care of hyperlinks as they are not inside Run (bug reported by mdeclercq github.com/onizet/html2openxml/workitem/11162)
-				if (p != null && !p.HasChild<Run>() && !p.HasChild<Hyperlink>()) p.Remove();
+				if (p != null && !p.HasChild<OxW.Run>() && !p.HasChild<OxW.Hyperlink>()) p.Remove();
 				else i++;
 			}
 
-			// We add this paragraph regardless it has elements or not. A TableCell requires at least a Paragraph, as the last child of
+			// We add this paragraph regardless it has elements or not. A OxW.TableCell requires at least a Paragraph, as the last child of
 			// of a table cell.
 			// additional check for a proper cleaning (reported by antgraf github.com/onizet/html2openxml/discussions/272744)
-			if (!(cell.LastChild is Paragraph) || elements.Count > 0) cell.Append(new Paragraph(elements));
+			if (!(cell.LastChild is OxW.Paragraph) || elements.Count > 0) cell.Append(new OxW.Paragraph(elements));
 
 			htmlStyles.Tables.ApplyTags(cell);
 

@@ -1,6 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
-using DocumentFormat.OpenXml.Wordprocessing;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml.Tests
 {
@@ -18,19 +18,19 @@ namespace HtmlToOpenXml.Tests
             var elements = converter.Parse(html);
             Assert.That(elements.Count, Is.EqualTo(1));
             Assert.Multiple(() => {
-                Assert.That(elements[0], Is.TypeOf(typeof(Paragraph)));
-                Assert.That(elements[0].LastChild, Is.TypeOf(typeof(Run)));
+				Assert.That(elements[0], Is.TypeOf(typeof(OxW.Paragraph)));
+				Assert.That(elements[0].LastChild, Is.TypeOf(typeof(OxW.Run)));
                 Assert.That(elements[0].InnerText, Is.EqualTo("NASA"));
             });
 
-            var noteRef = elements[0].LastChild.GetFirstChild<FootnoteReference>();
+			var noteRef = elements[0].LastChild.GetFirstChild<OxW.FootnoteReference>();
             Assert.IsNotNull(noteRef);
             Assert.That(noteRef.Id.HasValue, Is.EqualTo(true));
 
             Assert.IsNotNull(mainPart.FootnotesPart);
             Assert.That(mainPart.FootnotesPart.HyperlinkRelationships.Count(), Is.EqualTo(0));
 
-            var fnotes = mainPart.FootnotesPart.Footnotes.Elements<Footnote>().FirstOrDefault(f => f.Id.Value == noteRef.Id.Value);
+			var fnotes = mainPart.FootnotesPart.Footnotes.Elements<OxW.Footnote>().FirstOrDefault(f => f.Id.Value == noteRef.Id.Value);
             Assert.IsNotNull(fnotes);
         }
 
@@ -44,20 +44,20 @@ namespace HtmlToOpenXml.Tests
             var elements = converter.Parse(html);
             Assert.That(elements.Count, Is.EqualTo(1));
             Assert.Multiple(() => {
-                Assert.That(elements[0], Is.TypeOf(typeof(Paragraph)));
-                Assert.That(elements[0].LastChild, Is.TypeOf(typeof(Run)));
+				Assert.That(elements[0], Is.TypeOf(typeof(OxW.Paragraph)));
+				Assert.That(elements[0].LastChild, Is.TypeOf(typeof(OxW.Run)));
                 Assert.That(elements[0].InnerText, Is.EqualTo("NASA"));
             });
 
-            var noteRef = elements[0].LastChild.GetFirstChild<FootnoteReference>();
+			var noteRef = elements[0].LastChild.GetFirstChild<OxW.FootnoteReference>();
             Assert.IsNotNull(noteRef);
             Assert.That(noteRef.Id.HasValue, Is.EqualTo(true));
 
             Assert.IsNotNull(mainPart.FootnotesPart);
-            var fnotes = mainPart.FootnotesPart.Footnotes.Elements<Footnote>().FirstOrDefault(f => f.Id.Value == noteRef.Id.Value);
+			var fnotes = mainPart.FootnotesPart.Footnotes.Elements<OxW.Footnote>().FirstOrDefault(f => f.Id.Value == noteRef.Id.Value);
             Assert.IsNotNull(fnotes);
 
-            var link = fnotes.FirstChild.GetFirstChild<Hyperlink>();
+			var link = fnotes.FirstChild.GetFirstChild<OxW.Hyperlink>();
             Assert.IsNotNull(link);
 
             var extLink = mainPart.FootnotesPart.HyperlinkRelationships.FirstOrDefault(r => r.Id == link.Id);
@@ -72,12 +72,12 @@ namespace HtmlToOpenXml.Tests
             converter.AcronymPosition = AcronymPosition.DocumentEnd;
             var elements = converter.Parse(@"<acronym title='www.nasa.gov'>NASA</acronym>");
 
-            var noteRef = elements[0].LastChild.GetFirstChild<EndnoteReference>();
+			var noteRef = elements[0].LastChild.GetFirstChild<OxW.EndnoteReference>();
             Assert.IsNotNull(noteRef);
             Assert.That(noteRef.Id.HasValue, Is.EqualTo(true));
 
             Assert.IsNotNull(mainPart.EndnotesPart);
-            var fnotes = mainPart.EndnotesPart.Endnotes.Elements<Endnote>().FirstOrDefault(f => f.Id.Value == noteRef.Id.Value);
+			var fnotes = mainPart.EndnotesPart.Endnotes.Elements<OxW.Endnote>().FirstOrDefault(f => f.Id.Value == noteRef.Id.Value);
             Assert.IsNotNull(fnotes);
         }
     }

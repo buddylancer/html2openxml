@@ -13,30 +13,25 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxP = DocumentFormat.OpenXml.Packaging;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
+using OxD = DocumentFormat.OpenXml.Drawing;
 using HtmlToOpenXml.IO;
 
 namespace HtmlToOpenXml
 {
-    using a = DocumentFormat.OpenXml.Drawing;
-    using pic = DocumentFormat.OpenXml.Drawing.Pictures;
-    using wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
-
-
-
 	/// <summary>
 	/// Helper class to convert some Html text to OpenXml elements.
 	/// </summary>
 	public partial class HtmlConverter
 	{
-		private MainDocumentPart mainPart;
+		private OxP.MainDocumentPart mainPart;
 		/// <summary>The list of paragraphs that will be returned.</summary>
-		private IList<OpenXmlCompositeElement> paragraphs;
+		private IList<Ox.OpenXmlCompositeElement> paragraphs;
 		/// <summary>Holds the elements to append to the current paragraph.</summary>
-		private List<OpenXmlElement> elements;
-		private Paragraph currentParagraph;
+		private List<Ox.OpenXmlElement> elements;
+		private OxW.Paragraph currentParagraph;
 		private Int32 footnotesRef = 1, endnotesRef = 1, figCaptionRef = -1;
 		private Dictionary<String, Action<HtmlEnumerator>> knownTags;
         private ImagePrefetcher imagePrefetcher;
@@ -52,7 +47,7 @@ namespace HtmlToOpenXml
 		/// </summary>
 		/// <param name="mainPart">The mainDocumentPart of a document where to write the conversion to.</param>
 		/// <remarks>We preload some configuration from inside the document such as style, bookmarks,...</remarks>
-        public HtmlConverter(MainDocumentPart mainPart) : this(mainPart, null)
+        public HtmlConverter(OxP.MainDocumentPart mainPart) : this(mainPart, null)
         {
         }
 
@@ -62,7 +57,7 @@ namespace HtmlToOpenXml
         /// <param name="mainPart">The mainDocumentPart of a document where to write the conversion to.</param>
         /// <param name="webRequester">Factory to download the images.</param>
         /// <remarks>We preload some configuration from inside the document such as style, bookmarks,...</remarks>
-        public HtmlConverter(MainDocumentPart mainPart, IWebRequest webRequester = null)
+		public HtmlConverter(OxP.MainDocumentPart mainPart, IWebRequest webRequester = null)
         {
             this.knownTags = InitKnownTags();
 			if (mainPart == null)
@@ -76,20 +71,20 @@ namespace HtmlToOpenXml
 		/// Start the parse processing.
 		/// </summary>
 		/// <returns>Returns a list of parsed paragraph.</returns>
-        public IList<OpenXmlCompositeElement> Parse(String html)
+		public IList<Ox.OpenXmlCompositeElement> Parse(String html)
 		{
 			if (String.IsNullOrEmpty(html))
-				return new Paragraph[0];
+				return new OxW.Paragraph[0];
 
 			// ensure a body exists to avoid any errors when trying to access it
 			if (mainPart.Document == null)
-				new Document(new Body()).Save(mainPart);
+				new OxW.Document(new OxW.Body()).Save(mainPart);
 			else if (mainPart.Document.Body == null)
-				mainPart.Document.Body = new Body();
+				mainPart.Document.Body = new OxW.Body();
 
 			// Reset:
-			elements = new List<OpenXmlElement>();
-			paragraphs = new List<OpenXmlCompositeElement>();
+			elements = new List<Ox.OpenXmlElement>();
+			paragraphs = new List<Ox.OpenXmlCompositeElement>();
 			tables = new TableContext();
 			htmlStyles.Runs.Reset();
 			currentParagraph = null;
@@ -98,8 +93,8 @@ namespace HtmlToOpenXml
 			paragraphs.Add(currentParagraph = htmlStyles.Paragraph.NewParagraph());
 			if (htmlStyles.DefaultStyles.ParagraphStyle != null)
 			{
-				currentParagraph.ParagraphProperties = new ParagraphProperties {
-					ParagraphStyleId = new ParagraphStyleId { Val = htmlStyles.DefaultStyles.ParagraphStyle }
+				currentParagraph.ParagraphProperties = new OxW.ParagraphProperties {
+					ParagraphStyleId = new OxW.ParagraphStyleId { Val = htmlStyles.DefaultStyles.ParagraphStyle }
 				};
 			}
 
@@ -126,14 +121,14 @@ namespace HtmlToOpenXml
 
             var paragraphs = Parse(html);
 
-			Body body = mainPart.Document.Body;
-			SectionProperties sectionProperties = body.GetLastChild<SectionProperties>();
+			OxW.Body body = mainPart.Document.Body;
+			OxW.SectionProperties sectionProperties = body.GetLastChild<OxW.SectionProperties>();
 			for (int i = 0; i < paragraphs.Count; i++)
 				body.Append(paragraphs[i]);
 
 			// move the paragraph with BookmarkStart `_GoBack` as the last child
-			var p = body.GetFirstChild<Paragraph>();
-			if (p != null && p.HasChild<BookmarkStart>())
+			var p = body.GetFirstChild<OxW.Paragraph>();
+			if (p != null && p.HasChild<OxW.BookmarkStart>())
 			{
 				p.Remove();
 				body.Append(p);
@@ -160,7 +155,7 @@ namespace HtmlToOpenXml
 
 			for (int i = 0; i < paragraphs.Count; i++)
 			{
-				OpenXmlCompositeElement p = paragraphs[i];
+				Ox.OpenXmlCompositeElement p = paragraphs[i];
 
 				// If the paragraph is between 2 tables, we don't remove it (it provides some
 				// separation or Word will merge the two tables)
@@ -170,14 +165,14 @@ namespace HtmlToOpenXml
 
 				if (p.HasChildren)
 				{
-					if (!(p is Paragraph)) continue;
+					if (!(p is OxW.Paragraph)) continue;
 
 					// Has this paragraph some other elements than ParagraphProperties?
 					// This code ensure no default style or attribute on empty div will stay
 					hasRuns = false;
 					for (int j = p.ChildElements.Count - 1; j >= 0; j--)
 					{
-						ParagraphProperties prop = p.ChildElements[j] as ParagraphProperties;
+						OxW.ParagraphProperties prop = p.ChildElements[j] as OxW.ParagraphProperties;
 						if (prop == null || prop.SectionProperties != null)
 						{
 							hasRuns = true;
@@ -214,8 +209,8 @@ namespace HtmlToOpenXml
 				}
 				else
 				{
-					Run run = new Run(
-						new Text(HttpUtility.HtmlDecode(en.Current)) { Space = SpaceProcessingModeValues.Preserve }
+					OxW.Run run = new OxW.Run(
+						new OxW.Text(HttpUtility.HtmlDecode(en.Current)) { Space = Ox.SpaceProcessingModeValues.Preserve }
 					);
 					// apply the previously discovered style
 					htmlStyles.Runs.ApplyTags(run);
@@ -246,20 +241,20 @@ namespace HtmlToOpenXml
 		/// Add a new paragraph, table, ... to the list of processed paragrahs. This method takes care of 
 		/// adding the new element to the current table if it exists.
 		/// </summary>
-		private void AddParagraph(OpenXmlCompositeElement element)
+		private void AddParagraph(Ox.OpenXmlCompositeElement element)
 		{
 			if (tables.HasContext)
 			{
-				TableRow row = tables.CurrentTable.GetLastChild<TableRow>();
+				OxW.TableRow row = tables.CurrentTable.GetLastChild<OxW.TableRow>();
 				if (row == null)
 				{
-					tables.CurrentTable.Append(row = new TableRow());
+					tables.CurrentTable.Append(row = new OxW.TableRow());
 					tables.CellPosition = new CellPosition(tables.CellPosition.Row + 1, 0);
 				}
-                TableCell cell = row.GetLastChild<TableCell>();
+				OxW.TableCell cell = row.GetLastChild<OxW.TableCell>();
                 if (cell == null) // ensure cell exists (issue #13982 reported by Willu)
                 {
-                    row.Append(cell = new TableCell());
+					row.Append(cell = new OxW.TableCell());
                 }
                 cell.Append(element);
 			}
@@ -278,32 +273,32 @@ namespace HtmlToOpenXml
 		/// <returns>Returns the id of the footnote reference.</returns>
 		private int AddFootnoteReference(string description)
 		{
-			FootnotesPart fpart = mainPart.FootnotesPart;
+			OxP.FootnotesPart fpart = mainPart.FootnotesPart;
 			if (fpart == null)
-				fpart = mainPart.AddNewPart<FootnotesPart>();
+				fpart = mainPart.AddNewPart<OxP.FootnotesPart>();
 
 			if (fpart.Footnotes == null)
 			{
 				// Insert a new Footnotes reference
-				new Footnotes(
-					new Footnote(
-						new Paragraph(
-							new ParagraphProperties {
-								SpacingBetweenLines = new SpacingBetweenLines() { After = "0", Line = "240", LineRule = LineSpacingRuleValues.Auto }
+				new OxW.Footnotes(
+					new OxW.Footnote(
+						new OxW.Paragraph(
+							new OxW.ParagraphProperties {
+								SpacingBetweenLines = new OxW.SpacingBetweenLines() { After = "0", Line = "240", LineRule = OxW.LineSpacingRuleValues.Auto }
 							},
-							new Run(
-								new SeparatorMark())
+							new OxW.Run(
+								new OxW.SeparatorMark())
 						)
-					) { Type = FootnoteEndnoteValues.Separator, Id = -1 },
-					new Footnote(
-						new Paragraph(
-							new ParagraphProperties {
-								SpacingBetweenLines = new SpacingBetweenLines() { After = "0", Line = "240", LineRule = LineSpacingRuleValues.Auto }
+					) { Type = OxW.FootnoteEndnoteValues.Separator, Id = -1 },
+					new OxW.Footnote(
+						new OxW.Paragraph(
+							new OxW.ParagraphProperties {
+								SpacingBetweenLines = new OxW.SpacingBetweenLines() { After = "0", Line = "240", LineRule = OxW.LineSpacingRuleValues.Auto }
 							},
-							new Run(
-								new ContinuationSeparatorMark())
+							new OxW.Run(
+								new OxW.ContinuationSeparatorMark())
 						)
-					) { Type = FootnoteEndnoteValues.ContinuationSeparator, Id = 0 }).Save(fpart);
+					) { Type = OxW.FootnoteEndnoteValues.ContinuationSeparator, Id = 0 }).Save(fpart);
 				footnotesRef = 1;
 			}
 			else
@@ -311,7 +306,7 @@ namespace HtmlToOpenXml
 				// The footnotesRef Id is a required field and should be unique. You can assign yourself some hard-coded
 				// value but that's absolutely not safe. We will loop through the existing Footnote
 				// to retrieve the highest Id.
-				foreach (var fn in fpart.Footnotes.Elements<Footnote>())
+				foreach (var fn in fpart.Footnotes.Elements<OxW.Footnote>())
 				{
 					if (fn.Id.HasValue && fn.Id > footnotesRef) footnotesRef = (int) fn.Id.Value;
 				}
@@ -319,22 +314,22 @@ namespace HtmlToOpenXml
 			}
 
 
-            Paragraph p;
+			OxW.Paragraph p;
 			fpart.Footnotes.Append(
-				new Footnote(
-					p = new Paragraph(
-						new ParagraphProperties {
-							ParagraphStyleId = new ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.FootnoteTextStyle, StyleValues.Paragraph) }
+				new OxW.Footnote(
+					p = new OxW.Paragraph(
+						new OxW.ParagraphProperties {
+							ParagraphStyleId = new OxW.ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.FootnoteTextStyle, OxW.StyleValues.Paragraph) }
 						},
-						new Run(
-							new RunProperties {
-								RunStyle = new RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.FootnoteReferenceStyle, StyleValues.Character) }
+						new OxW.Run(
+							new OxW.RunProperties {
+								RunStyle = new OxW.RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.FootnoteReferenceStyle, OxW.StyleValues.Character) }
 							},
-							new FootnoteReferenceMark()),
-						new Run(
+							new OxW.FootnoteReferenceMark()),
+						new OxW.Run(
 				        // Word insert automatically a space before the definition to separate the
                         // reference number with its description
-							new Text(" ") { Space = SpaceProcessingModeValues.Preserve })
+							new OxW.Text(" ") { Space = Ox.SpaceProcessingModeValues.Preserve })
 					)
 				) { Id = footnotesRef });
 
@@ -347,21 +342,21 @@ namespace HtmlToOpenXml
                 // when URI references a network server (ex: \\server01), System.IO.Packaging is not resolving the correct URI and this leads
                 // to a bad-formed XML not recognized by Word. To enforce the "original URI", a fresh new instance must be created
                 uriReference = new Uri(uriReference.AbsoluteUri, UriKind.Absolute);
-                HyperlinkRelationship extLink = fpart.AddHyperlinkRelationship(uriReference, true);
-                var h = new Hyperlink(
+				OxP.HyperlinkRelationship extLink = fpart.AddHyperlinkRelationship(uriReference, true);
+				var h = new OxW.Hyperlink(
                     ) { History = true, Id = extLink.Id };
 
-                h.Append(new Run(
-                    new RunProperties {
-                        RunStyle = new RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.HyperlinkStyle, StyleValues.Character) }
+				h.Append(new OxW.Run(
+                    new OxW.RunProperties {
+						RunStyle = new OxW.RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.HyperlinkStyle, OxW.StyleValues.Character) }
                     },
-                    new Text(description)));
+					new OxW.Text(description)));
                 p.Append(h);
             }
             else
             {
-                p.Append(new Run(
-                    new Text(description) { Space = SpaceProcessingModeValues.Preserve }));
+				p.Append(new OxW.Run(
+					new OxW.Text(description) { Space = Ox.SpaceProcessingModeValues.Preserve }));
             }
 
 			fpart.Footnotes.Save();
@@ -380,30 +375,30 @@ namespace HtmlToOpenXml
 		/// <returns>Returns the id of the endnote reference.</returns>
 		private int AddEndnoteReference(string description)
 		{
-			EndnotesPart fpart = mainPart.EndnotesPart;
+			OxP.EndnotesPart fpart = mainPart.EndnotesPart;
 			if (fpart == null)
-				fpart = mainPart.AddNewPart<EndnotesPart>();
+				fpart = mainPart.AddNewPart<OxP.EndnotesPart>();
 
 			if (fpart.Endnotes == null)
 			{
 				// Insert a new Footnotes reference
-				new Endnotes(
-					new Endnote(
-						new Paragraph(
-							new ParagraphProperties {
-								SpacingBetweenLines = new SpacingBetweenLines() { After = "0", Line = "240", LineRule = LineSpacingRuleValues.Auto }
+				new OxW.Endnotes(
+					new OxW.Endnote(
+						new OxW.Paragraph(
+							new OxW.ParagraphProperties {
+								SpacingBetweenLines = new OxW.SpacingBetweenLines() { After = "0", Line = "240", LineRule = OxW.LineSpacingRuleValues.Auto }
 							},
-							new Run(
-								new SeparatorMark())
+							new OxW.Run(
+								new OxW.SeparatorMark())
 						)
-					) { Type = FootnoteEndnoteValues.ContinuationSeparator, Id = -1 },
-					new Endnote(
-						new Paragraph(
-							new ParagraphProperties {
-								SpacingBetweenLines = new SpacingBetweenLines() { After = "0", Line = "240", LineRule = LineSpacingRuleValues.Auto }
+					) { Type = OxW.FootnoteEndnoteValues.ContinuationSeparator, Id = -1 },
+					new OxW.Endnote(
+						new OxW.Paragraph(
+							new OxW.ParagraphProperties {
+								SpacingBetweenLines = new OxW.SpacingBetweenLines() { After = "0", Line = "240", LineRule = OxW.LineSpacingRuleValues.Auto }
 							},
-							new Run(
-								new ContinuationSeparatorMark())
+							new OxW.Run(
+								new OxW.ContinuationSeparatorMark())
 						)
 					) { Id = 0 }).Save(fpart);
 				endnotesRef = 1;
@@ -413,7 +408,7 @@ namespace HtmlToOpenXml
 				// The footnotesRef Id is a required field and should be unique. You can assign yourself some hard-coded
 				// value but that's absolutely not safe. We will loop through the existing Footnote
 				// to retrieve the highest Id.
-				foreach (var p in fpart.Endnotes.Elements<Endnote>())
+				foreach (var p in fpart.Endnotes.Elements<OxW.Endnote>())
 				{
 					if (p.Id.HasValue && p.Id > footnotesRef) endnotesRef = (int) p.Id.Value;
 				}
@@ -421,20 +416,20 @@ namespace HtmlToOpenXml
 			}
 
 			fpart.Endnotes.Append(
-				new Endnote(
-					new Paragraph(
-						new ParagraphProperties {
-							ParagraphStyleId = new ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.EndnoteTextStyle, StyleValues.Paragraph) }
+				new OxW.Endnote(
+					new OxW.Paragraph(
+						new OxW.ParagraphProperties {
+							ParagraphStyleId = new OxW.ParagraphStyleId() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.EndnoteTextStyle, OxW.StyleValues.Paragraph) }
 						},
-						new Run(
-							new RunProperties {
-								RunStyle = new RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.EndnoteReferenceStyle, StyleValues.Character) }
+						new OxW.Run(
+							new OxW.RunProperties {
+								RunStyle = new OxW.RunStyle() { Val = htmlStyles.GetStyle(htmlStyles.DefaultStyles.EndnoteReferenceStyle, OxW.StyleValues.Character) }
 							},
-							new FootnoteReferenceMark()),
-						new Run(
+							new OxW.FootnoteReferenceMark()),
+						new OxW.Run(
 				// Word insert automatically a space before the definition to separate the reference number
 				// with its description
-							new Text(" " + description) { Space = SpaceProcessingModeValues.Preserve })
+							new OxW.Text(" " + description) { Space = Ox.SpaceProcessingModeValues.Preserve })
 					)
 				) { Id = endnotesRef });
 
@@ -456,7 +451,7 @@ namespace HtmlToOpenXml
 			if (figCaptionRef == -1)
 			{
 				figCaptionRef = 0;
-				foreach (var p in mainPart.Document.Descendants<SimpleField>())
+				foreach (var p in mainPart.Document.Descendants<OxW.SimpleField>())
 				{
 					if (p.Instruction == " SEQ Figure \\* ARABIC ")
 						figCaptionRef++;
@@ -470,7 +465,7 @@ namespace HtmlToOpenXml
 
 		#region AddImagePart
 
-		private Drawing AddImagePart(String imageSource, String alt, Size preferredSize)
+		private OxW.Drawing AddImagePart(String imageSource, String alt, Size preferredSize)
 		{
 			if (imageObjId == UInt32.MinValue)
 			{
@@ -480,12 +475,12 @@ namespace HtmlToOpenXml
 
 				drawingObjId = 1; // 1 is the minimum ID set by MS Office.
 				imageObjId = 1;
-				foreach (var d in mainPart.Document.Body.Descendants<Drawing>())
+				foreach (var d in mainPart.Document.Body.Descendants<OxW.Drawing>())
 				{
 					if (d.Inline == null) continue; // fix some rare issue where Inline is null (reported by scwebgroup)
 					if (d.Inline.DocProperties.Id > drawingObjId) drawingObjId = d.Inline.DocProperties.Id;
 
-					var nvPr = d.Inline.Graphic.GraphicData.GetFirstChild<pic.NonVisualPictureProperties>();
+					var nvPr = d.Inline.Graphic.GraphicData.GetFirstChild<OxD.Pictures.NonVisualPictureProperties>();
 					if (nvPr != null && nvPr.NonVisualDrawingProperties.Id > imageObjId)
 						imageObjId = nvPr.NonVisualDrawingProperties.Id;
 				}
@@ -518,37 +513,38 @@ namespace HtmlToOpenXml
 			++drawingObjId;
 			++imageObjId;
 
-			var img = new Drawing(
-				new wp.Inline(
-					new wp.Extent() { Cx = widthInEmus, Cy = heightInEmus },
-					new wp.EffectExtent() { LeftEdge = 19050L, TopEdge = 0L, RightEdge = 0L, BottomEdge = 0L },
-					new wp.DocProperties() { Id = drawingObjId, Name = "Picture " + imageObjId, Description = String.Empty },
-					new wp.NonVisualGraphicFrameDrawingProperties {
-						GraphicFrameLocks = new a.GraphicFrameLocks() { NoChangeAspect = true }
+			var img = new OxW.Drawing(
+				new OxD.Wordprocessing.Inline(
+					new OxD.Wordprocessing.Extent() { Cx = widthInEmus, Cy = heightInEmus },
+					new OxD.Wordprocessing.EffectExtent() { LeftEdge = 19050L, TopEdge = 0L, RightEdge = 0L, BottomEdge = 0L },
+					new OxD.Wordprocessing.DocProperties() { Id = drawingObjId, Name = "Picture " + imageObjId, Description = String.Empty },
+					new OxD.Wordprocessing.NonVisualGraphicFrameDrawingProperties
+					{
+						GraphicFrameLocks = new OxD.GraphicFrameLocks() { NoChangeAspect = true }
 					},
-					new a.Graphic(
-						new a.GraphicData(
-							new pic.Picture(
-								new pic.NonVisualPictureProperties {
-									NonVisualDrawingProperties = new pic.NonVisualDrawingProperties() { Id = imageObjId, Name = DataUri.IsWellFormed(imageSource) ? string.Empty : imageSource, Description = alt },
-									NonVisualPictureDrawingProperties = new pic.NonVisualPictureDrawingProperties(
-										new a.PictureLocks() { NoChangeAspect = true, NoChangeArrowheads = true })
+					new OxD.Graphic(
+						new OxD.GraphicData(
+							new OxD.Pictures.Picture(
+								new OxD.Pictures.NonVisualPictureProperties {
+									NonVisualDrawingProperties = new OxD.Pictures.NonVisualDrawingProperties() { Id = imageObjId, Name = DataUri.IsWellFormed(imageSource) ? string.Empty : imageSource, Description = alt },
+									NonVisualPictureDrawingProperties = new OxD.Pictures.NonVisualPictureDrawingProperties(
+										new OxD.PictureLocks() { NoChangeAspect = true, NoChangeArrowheads = true })
 								},
-								new pic.BlipFill(
-									new a.Blip() { Embed = iinfo.ImagePartId },
-									new a.SourceRectangle(),
-									new a.Stretch(
-										new a.FillRectangle())),
-								new pic.ShapeProperties(
-									new a.Transform2D(
-										new a.Offset() { X = 0L, Y = 0L },
-										new a.Extents() { Cx = widthInEmus, Cy = heightInEmus }),
-									new a.PresetGeometry(
-										new a.AdjustValueList()
-									) { Preset = a.ShapeTypeValues.Rectangle }
-								) { BlackWhiteMode = a.BlackWhiteModeValues.Auto })
+								new OxD.Pictures.BlipFill(
+									new OxD.Blip() { Embed = iinfo.ImagePartId },
+									new OxD.SourceRectangle(),
+									new OxD.Stretch(
+										new OxD.FillRectangle())),
+								new OxD.Pictures.ShapeProperties(
+									new OxD.Transform2D(
+										new OxD.Offset() { X = 0L, Y = 0L },
+										new OxD.Extents() { Cx = widthInEmus, Cy = heightInEmus }),
+									new OxD.PresetGeometry(
+										new OxD.AdjustValueList()
+									) { Preset = OxD.ShapeTypeValues.Rectangle }
+								) { BlackWhiteMode = OxD.BlackWhiteModeValues.Auto })
 						) { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" })
-				) { DistanceFromTop = (UInt32Value) 0U, DistanceFromBottom = (UInt32Value) 0U, DistanceFromLeft = (UInt32Value) 0U, DistanceFromRight = (UInt32Value) 0U }
+				) { DistanceFromTop = (Ox.UInt32Value)0U, DistanceFromBottom = (Ox.UInt32Value)0U, DistanceFromLeft = (Ox.UInt32Value)0U, DistanceFromRight = (Ox.UInt32Value)0U }
 			);
 
 			return img;
@@ -568,17 +564,17 @@ namespace HtmlToOpenXml
 				{ "<acronym>", ProcessAcronym },
                 { "<article>", ProcessDiv },
                 { "<aside>", ProcessDiv },
-				{ "<b>", ProcessHtmlElement<Bold> },
+				{ "<b>", ProcessHtmlElement<OxW.Bold> },
                 { "<blockquote>", ProcessBlockQuote },
 				{ "<body>", ProcessBody },
 				{ "<br>", ProcessBr },
 				{ "<caption>", ProcessTableCaption },
 				{ "<cite>", ProcessCite },
-				{ "<del>", ProcessHtmlElement<Strike> },
+				{ "<del>", ProcessHtmlElement<OxW.Strike> },
 				{ "<div>", ProcessDiv },
 				{ "<dd>", ProcessDefinitionListItem },
 				{ "<dt>", ProcessDefinitionList },
-				{ "<em>", ProcessHtmlElement<Italic> },
+				{ "<em>", ProcessHtmlElement<OxW.Italic> },
 				{ "<font>", ProcessFont },
 				{ "<h1>", ProcessHeading },
 				{ "<h2>", ProcessHeading },
@@ -589,7 +585,7 @@ namespace HtmlToOpenXml
 				{ "<hr>", ProcessHorizontalLine },
                 { "<html>", ProcessHtml },
                 { "<figcaption>", ProcessFigureCaption },
-				{ "<i>", ProcessHtmlElement<Italic> },
+				{ "<i>", ProcessHtmlElement<OxW.Italic> },
 				{ "<img>", ProcessImage },
 				{ "<ins>", ProcessUnderline },
 				{ "<li>", ProcessLi },
@@ -599,9 +595,9 @@ namespace HtmlToOpenXml
                 { "<q>", ProcessQuote },
 				{ "<span>", ProcessSpan },
                 { "<section>", ProcessDiv },
-                { "<s>", ProcessHtmlElement<Strike> },
-				{ "<strike>", ProcessHtmlElement<Strike> },
-				{ "<strong>", ProcessHtmlElement<Bold> },
+                { "<s>", ProcessHtmlElement<OxW.Strike> },
+				{ "<strike>", ProcessHtmlElement<OxW.Strike> },
+				{ "<strong>", ProcessHtmlElement<OxW.Bold> },
 				{ "<sub>", ProcessSubscript },
 				{ "<sup>", ProcessSuperscript },
 				{ "<table>", ProcessTable },
@@ -691,7 +687,7 @@ namespace HtmlToOpenXml
 		/// number of tags (&lt;p&gt;, &lt;pre&gt;, &lt;div&gt;, &lt;span&gt; and &lt;body&gt;).
 		/// </summary>
 		/// <returns>Returns true if the processing of this tag should generate a new paragraph.</returns>
-		private bool ProcessContainerAttributes(HtmlEnumerator en, IList<OpenXmlElement> styleAttributes)
+		private bool ProcessContainerAttributes(HtmlEnumerator en, IList<Ox.OpenXmlElement> styleAttributes)
 		{
 			bool newParagraph = false;
 
@@ -701,20 +697,20 @@ namespace HtmlToOpenXml
 				String attrValue = en.StyleAttributes["page-break-after"];
 				if (attrValue == "always")
 				{
-					paragraphs.Add(new Paragraph(
-						new Run(
-							new Break() { Type = BreakValues.Page })));
+					paragraphs.Add(new OxW.Paragraph(
+						new OxW.Run(
+							new OxW.Break() { Type = OxW.BreakValues.Page })));
 				}
 
 				attrValue = en.StyleAttributes["page-break-before"];
 				if (attrValue == "always")
 				{
 					elements.Add(
-						new Run(
-							new Break() { Type = BreakValues.Page })
+						new OxW.Run(
+							new OxW.Break() { Type = OxW.BreakValues.Page })
 					);
-					elements.Add(new Run(
-							new LastRenderedPageBreak())
+					elements.Add(new OxW.Run(
+							new OxW.LastRenderedPageBreak())
 					);
 				}
 			}
@@ -723,7 +719,7 @@ namespace HtmlToOpenXml
             var padding = en.StyleAttributes.GetAsMargin("padding");
             if (!padding.IsEmpty && (padding.Left.IsFixed || padding.Right.IsFixed))
 			{
-                Indentation indentation = new Indentation();
+				OxW.Indentation indentation = new OxW.Indentation();
                 if (padding.Left.Value > 0) indentation.Left = padding.Left.ValueInDxa.ToString(CultureInfo.InvariantCulture);
                 if (padding.Right.Value > 0) indentation.Right = padding.Right.ValueInDxa.ToString(CultureInfo.InvariantCulture);
 
@@ -741,12 +737,12 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Generate the required OpenXml element for handling page orientation.
 		/// </summary>
-		private static SectionProperties ChangePageOrientation(PageOrientationValues orientation)
+		private static OxW.SectionProperties ChangePageOrientation(OxW.PageOrientationValues orientation)
 		{
-			PageSize pageSize = new PageSize() { Width = (UInt32Value) 16838U, Height = (UInt32Value) 11906U };
-			if (orientation == PageOrientationValues.Portrait)
+			OxW.PageSize pageSize = new OxW.PageSize() { Width = (Ox.UInt32Value)16838U, Height = (Ox.UInt32Value)11906U };
+			if (orientation == OxW.PageOrientationValues.Portrait)
 			{
-				UInt32Value swap = pageSize.Width;
+				Ox.UInt32Value swap = pageSize.Width;
 				pageSize.Width = pageSize.Height;
 				pageSize.Height = swap;
 			}
@@ -755,14 +751,14 @@ namespace HtmlToOpenXml
 				pageSize.Orient = orientation;
 			}
 
-			return new SectionProperties (
+			return new OxW.SectionProperties(
 				pageSize,
-				new PageMargin() {
-					Top = 1417, Right = (UInt32Value) 1417U, Bottom = 1417, Left = (UInt32Value) 1417U,
-					Header = (UInt32Value) 708U, Footer = (UInt32Value) 708U, Gutter = (UInt32Value) 0U
+				new OxW.PageMargin() {
+					Top = 1417, Right = (Ox.UInt32Value) 1417U, Bottom = 1417, Left = (Ox.UInt32Value) 1417U,
+					Header = (Ox.UInt32Value) 708U, Footer = (Ox.UInt32Value) 708U, Gutter = (Ox.UInt32Value) 0U
 				},
-				new Columns() { Space = "708" },
-				new DocGrid() { LinePitch = 360 }
+				new OxW.Columns() { Space = "708" },
+				new OxW.DocGrid() { LinePitch = 360 }
 			);
 		}
 
@@ -844,7 +840,7 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Gets or sets where the Legend tag (&lt;caption&gt;) should be rendered (above or below the table).
 		/// </summary>
-		public CaptionPositionValues TableCaptionPosition { get; set; }
+		public OxW.CaptionPositionValues TableCaptionPosition { get; set; }
 
 		/// <summary>
 		/// Gets or sets whether the &lt;pre&gt; tag should be rendered as a table.

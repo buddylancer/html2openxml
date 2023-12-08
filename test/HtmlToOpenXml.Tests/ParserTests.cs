@@ -1,7 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+using OxP = DocumentFormat.OpenXml.Packaging;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml.Tests
 {
@@ -27,49 +27,49 @@ namespace HtmlToOpenXml.Tests
             Assert.That(elements.Count, Is.EqualTo(1));
             Assert.That(elements[0].ChildElements.Count, Is.EqualTo(3));
 
-            var runProperties = elements[0].ChildElements[0].GetFirstChild<RunProperties>();
+			var runProperties = elements[0].ChildElements[0].GetFirstChild<OxW.RunProperties>();
             Assert.IsNull(runProperties);
 
-            runProperties = elements[0].ChildElements[1].GetFirstChild<RunProperties>();
+			runProperties = elements[0].ChildElements[1].GetFirstChild<OxW.RunProperties>();
             Assert.IsNotNull(runProperties);
-            Assert.That(runProperties.HasChild<Italic>(), Is.EqualTo(true));
-            Assert.That(runProperties.HasChild<Bold>(), Is.EqualTo(false));
+			Assert.That(runProperties.HasChild<OxW.Italic>(), Is.EqualTo(true));
+			Assert.That(runProperties.HasChild<OxW.Bold>(), Is.EqualTo(false));
 
-            runProperties = elements[0].ChildElements[2].GetFirstChild<RunProperties>();
+			runProperties = elements[0].ChildElements[2].GetFirstChild<OxW.RunProperties>();
             Assert.IsNotNull(runProperties);
-            Assert.That(runProperties.HasChild<Italic>(), Is.EqualTo(true));
-            Assert.That(runProperties.HasChild<Bold>(), Is.EqualTo(true));
+			Assert.That(runProperties.HasChild<OxW.Italic>(), Is.EqualTo(true));
+			Assert.That(runProperties.HasChild<OxW.Bold>(), Is.EqualTo(true));
 
             elements = converter.Parse("<p>First paragraph in semi-<i>italics <p>Second paragraph still italic <b>but also in bold</b></p>");
             Assert.That(elements.Count, Is.EqualTo(2));
             Assert.That(elements[0].ChildElements.Count, Is.EqualTo(2));
             Assert.That(elements[1].ChildElements.Count, Is.EqualTo(2));
 
-            runProperties = elements[0].ChildElements[0].GetFirstChild<RunProperties>();
+			runProperties = elements[0].ChildElements[0].GetFirstChild<OxW.RunProperties>();
             Assert.IsNull(runProperties);
 
-            runProperties = elements[0].ChildElements[1].GetFirstChild<RunProperties>();
+			runProperties = elements[0].ChildElements[1].GetFirstChild<OxW.RunProperties>();
             Assert.IsNotNull(runProperties);
-            Assert.That(runProperties.HasChild<Italic>(), Is.EqualTo(true));
+			Assert.That(runProperties.HasChild<OxW.Italic>(), Is.EqualTo(true));
 
-            runProperties = elements[1].FirstChild.GetFirstChild<RunProperties>();
+			runProperties = elements[1].FirstChild.GetFirstChild<OxW.RunProperties>();
             Assert.IsNotNull(runProperties);
-            Assert.That(runProperties.HasChild<Italic>(), Is.EqualTo(true));
-            Assert.That(runProperties.HasChild<Bold>(), Is.EqualTo(false));
+			Assert.That(runProperties.HasChild<OxW.Italic>(), Is.EqualTo(true));
+			Assert.That(runProperties.HasChild<OxW.Bold>(), Is.EqualTo(false));
 
-            runProperties = elements[1].ChildElements[1].GetFirstChild<RunProperties>();
+			runProperties = elements[1].ChildElements[1].GetFirstChild<OxW.RunProperties>();
             Assert.IsNotNull(runProperties);
-            Assert.That(runProperties.HasChild<Italic>(), Is.EqualTo(true));
-            Assert.That(runProperties.HasChild<Bold>(), Is.EqualTo(true));
+			Assert.That(runProperties.HasChild<OxW.Italic>(), Is.EqualTo(true));
+			Assert.That(runProperties.HasChild<OxW.Bold>(), Is.EqualTo(true));
 
             // this should generate a new paragraph with its own style
             elements = converter.Parse("<p>First paragraph in <i>italics </i><p>Second paragraph not in italic</p>");
             Assert.That(elements.Count, Is.EqualTo(2));
             Assert.That(elements[0].ChildElements.Count, Is.EqualTo(2));
             Assert.That(elements[1].ChildElements.Count, Is.EqualTo(1));
-            Assert.That(elements[1].FirstChild, Is.TypeOf(typeof(Run)));
+			Assert.That(elements[1].FirstChild, Is.TypeOf(typeof(OxW.Run)));
 
-            runProperties = elements[1].FirstChild.GetFirstChild<RunProperties>();
+			runProperties = elements[1].FirstChild.GetFirstChild<OxW.RunProperties>();
             Assert.IsNull(runProperties);
         }
 
@@ -101,9 +101,9 @@ namespace HtmlToOpenXml.Tests
 </table>");
 
             Assert.That(elements.Count, Is.EqualTo(1));
-            Assert.That(elements[0], Is.TypeOf(typeof(Table)));
+			Assert.That(elements[0], Is.TypeOf(typeof(OxW.Table)));
 
-            var rows = elements[0].Elements<TableRow>();
+            var rows = elements[0].Elements<OxW.TableRow>();
             Assert.That(rows.Count(), Is.EqualTo(3));
             Assert.That(rows.ElementAt(0).InnerText, Is.EqualTo("Header"));
             Assert.That(rows.ElementAt(1).InnerText, Is.EqualTo("Body"));
@@ -116,12 +116,12 @@ namespace HtmlToOpenXml.Tests
             var elements = converter.Parse(" < b >bold</b>");
             Assert.That(elements.Count, Is.EqualTo(1));
             Assert.That(elements[0].ChildElements.Count, Is.EqualTo(1));
-            Assert.IsNull(elements[0].FirstChild.GetFirstChild<RunProperties>());
+			Assert.IsNull(elements[0].FirstChild.GetFirstChild<OxW.RunProperties>());
 
             elements = converter.Parse(" <3");
             Assert.That(elements.Count, Is.EqualTo(1));
             Assert.That(elements[0].ChildElements.Count, Is.EqualTo(1));
-            Assert.IsNull(elements[0].FirstChild.GetFirstChild<RunProperties>());
+			Assert.IsNull(elements[0].FirstChild.GetFirstChild<OxW.RunProperties>());
         }
 
         [Test]
@@ -142,14 +142,14 @@ namespace HtmlToOpenXml.Tests
                     buffer.CopyTo(generatedDocument);
 
                 generatedDocument.Position = 0L;
-                using (WordprocessingDocument package = WordprocessingDocument.Open(generatedDocument, true))
+				using (OxP.WordprocessingDocument package = OxP.WordprocessingDocument.Open(generatedDocument, true))
                 {
-                    MainDocumentPart mainPart = package.MainDocumentPart;
+					OxP.MainDocumentPart mainPart = package.MainDocumentPart;
                     HtmlConverter converter = new HtmlConverter(mainPart);
 
                     var elements = converter.Parse("<div class='CustomStyle1'>Lorem</div><span>Ipsum</span>");
                     Assert.That(elements.Count, Is.GreaterThan(0));
-                    var paragraphProperties = elements[0].GetFirstChild<ParagraphProperties>();
+					var paragraphProperties = elements[0].GetFirstChild<OxW.ParagraphProperties>();
                     Assert.IsNotNull(paragraphProperties);
                     Assert.IsNotNull(paragraphProperties.ParagraphStyleId);
                     Assert.That(paragraphProperties.ParagraphStyleId.Val.Value, Is.EqualTo("CustomStyle1"));

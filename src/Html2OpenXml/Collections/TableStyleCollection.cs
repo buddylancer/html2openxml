@@ -11,12 +11,12 @@
  */
 using System;
 using System.Collections.Generic;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml
 {
-	using TagsAtSameLevel = System.ArraySegment<DocumentFormat.OpenXml.OpenXmlElement>;
+	using TagsAtSameLevel = System.ArraySegment<Ox.OpenXmlElement>;
 
 
 	sealed class TableStyleCollection : OpenXmlStyleCollectionBase
@@ -42,28 +42,28 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Apply all the current Html tag to the specified table cell.
 		/// </summary>
-		public override void ApplyTags(OpenXmlCompositeElement tableCell)
+		public override void ApplyTags(Ox.OpenXmlCompositeElement tableCell)
 		{
 			if (tags.Count > 0)
 			{
-				TableCellProperties properties = tableCell.GetFirstChild<TableCellProperties>();
-				if (properties == null) tableCell.PrependChild<TableCellProperties>(properties = new TableCellProperties());
+				OxW.TableCellProperties properties = tableCell.GetFirstChild<OxW.TableCellProperties>();
+				if (properties == null) tableCell.PrependChild<OxW.TableCellProperties>(properties = new OxW.TableCellProperties());
 
 				var en = tags.GetEnumerator();
 				while (en.MoveNext())
 				{
 					TagsAtSameLevel tagsOfSameLevel = en.Current.Value.Peek();
-					foreach (OpenXmlElement tag in tagsOfSameLevel.Array)
+					foreach (Ox.OpenXmlElement tag in tagsOfSameLevel.Array)
 						properties.AddChild(tag.CloneNode(true));
 				}
 			}
 
 			// Apply some style attributes on the unique Paragraph tag contained inside a table cell.
-			Paragraph p = tableCell.GetFirstChild<Paragraph>();
+			OxW.Paragraph p = tableCell.GetFirstChild<OxW.Paragraph>();
 			paragraphStyle.ApplyTags(p);
 		}
 
-		public void BeginTagForParagraph(string name, params OpenXmlElement[] elements)
+		public void BeginTagForParagraph(string name, params Ox.OpenXmlElement[] elements)
 		{
 			paragraphStyle.BeginTag(name, elements);
 		}
@@ -82,9 +82,9 @@ namespace HtmlToOpenXml
 		/// </summary>
 		/// <param name="en">The Html enumerator positionned on a <i>table (or related)</i> tag.</param>
 		/// <param name="runStyleAttributes">The collection of attributes where to store new discovered attributes.</param>
-		public void ProcessCommonAttributes(HtmlEnumerator en, IList<OpenXmlElement> runStyleAttributes)
+		public void ProcessCommonAttributes(HtmlEnumerator en, IList<Ox.OpenXmlElement> runStyleAttributes)
 		{
-			List<OpenXmlElement> containerStyleAttributes = new List<OpenXmlElement>();
+			List<Ox.OpenXmlElement> containerStyleAttributes = new List<Ox.OpenXmlElement>();
 
 			var colorValue = en.StyleAttributes.GetAsColor("background-color");
 
@@ -96,25 +96,25 @@ namespace HtmlToOpenXml
             if (!colorValue.IsEmpty)
 			{
 				containerStyleAttributes.Add(
-					new Shading() { Val = ShadingPatternValues.Clear, Color = "auto", Fill = colorValue.ToHexString() });
+					new OxW.Shading() { Val = OxW.ShadingPatternValues.Clear, Color = "auto", Fill = colorValue.ToHexString() });
 			}
 
 			var htmlAlign = en.StyleAttributes["vertical-align"];
 			if (htmlAlign == null) htmlAlign = en.Attributes["valign"];
 			if (htmlAlign != null)
 			{
-				TableVerticalAlignmentValues? valign = Converter.ToVAlign(htmlAlign);
+				OxW.TableVerticalAlignmentValues? valign = Converter.ToVAlign(htmlAlign);
 				if (valign.HasValue)
-					containerStyleAttributes.Add(new TableCellVerticalAlignment() { Val = valign });
+					containerStyleAttributes.Add(new OxW.TableCellVerticalAlignment() { Val = valign });
 			}
 
 			htmlAlign = en.StyleAttributes["text-align"];
 			if (htmlAlign == null) htmlAlign = en.Attributes["align"];
 			if (htmlAlign != null)
 			{
-				JustificationValues? halign = Converter.ToParagraphAlign(htmlAlign);
+				OxW.JustificationValues? halign = Converter.ToParagraphAlign(htmlAlign);
 				if (halign.HasValue)
-					this.BeginTagForParagraph(en.CurrentTag, new KeepNext(), new Justification { Val = halign });
+					this.BeginTagForParagraph(en.CurrentTag, new OxW.KeepNext(), new OxW.Justification { Val = halign });
 			}
 
 			// implemented by ddforge
@@ -123,10 +123,10 @@ namespace HtmlToOpenXml
 			{
 				for (int i = 0; i < classes.Length; i++)
 				{
-					string className = documentStyle.GetStyle(classes[i], StyleValues.Table, ignoreCase: true);
+					string className = documentStyle.GetStyle(classes[i], OxW.StyleValues.Table, ignoreCase: true);
 					if (className != null) // only one Style can be applied in OpenXml and dealing with inheritance is out of scope
 					{
-						containerStyleAttributes.Add(new RunStyle() { Val = className });
+						containerStyleAttributes.Add(new OxW.RunStyle() { Val = className });
 						break;
 					}
 				}

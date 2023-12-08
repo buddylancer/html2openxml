@@ -11,8 +11,8 @@
  */
 using System;
 using System.Collections.Generic;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+using OxP = DocumentFormat.OpenXml.Packaging;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml
 {
@@ -37,10 +37,10 @@ namespace HtmlToOpenXml
 		private ParagraphStyleCollection paraStyle;
         	private NumberingListStyleCollection listStyle;
 		private OpenXmlDocumentStyleCollection knownStyles;
-		private MainDocumentPart mainPart;
+		private OxP.MainDocumentPart mainPart;
 
 
-		internal HtmlDocumentStyle(MainDocumentPart mainPart)
+		internal HtmlDocumentStyle(OxP.MainDocumentPart mainPart)
 		{
 			PrepareStyles(mainPart);
 			tableStyle = new TableStyleCollection(this);
@@ -58,16 +58,16 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Preload the styles in the document to match localized style name.
 		/// </summary>
-		internal void PrepareStyles(MainDocumentPart mainPart)
+		internal void PrepareStyles(OxP.MainDocumentPart mainPart)
 		{
 			knownStyles = new OpenXmlDocumentStyleCollection();
 			if (mainPart.StyleDefinitionsPart == null) return;
 
-			Styles styles = mainPart.StyleDefinitionsPart.Styles;
+			OxW.Styles styles = mainPart.StyleDefinitionsPart.Styles;
 
-			foreach (var s in styles.Elements<Style>())
+			foreach (var s in styles.Elements<OxW.Style>())
 			{
-                		StyleName n = s.StyleName;
+				OxW.StyleName n = s.StyleName;
 				string originalIdName = s.StyleId;
                			 var id = 1;
 
@@ -104,9 +104,9 @@ namespace HtmlToOpenXml
 		/// <param name="styleType">True to obtain the character version of the given style.</param>
 		/// <param name="ignoreCase">Indicate whether the search should be performed with the case-sensitive flag or not.</param>
 		/// <returns>If not found, returns the given name argument.</returns>
-		public String GetStyle(string name, StyleValues styleType = StyleValues.Paragraph, bool ignoreCase = false)
+		public String GetStyle(string name, OxW.StyleValues styleType = OxW.StyleValues.Paragraph, bool ignoreCase = false)
 		{
-			Style style;
+			OxW.Style style;
 
 			// OpenXml is case-sensitive but CSS is not.
 			// We will try to find the styles another time with case-insensitive:
@@ -136,9 +136,9 @@ namespace HtmlToOpenXml
 					}
 				}
 
-				if (styleType == StyleValues.Character && !style.Type.Equals<StyleValues>(StyleValues.Character))
+				if (styleType == OxW.StyleValues.Character && !style.Type.Equals<OxW.StyleValues>(OxW.StyleValues.Character))
 				{
-					LinkedStyle linkStyle = style.GetFirstChild<LinkedStyle>();
+					OxW.LinkedStyle linkStyle = style.GetFirstChild<OxW.LinkedStyle>();
 					if (linkStyle != null) return linkStyle.Val;
 				}
 				return style.StyleId;
@@ -164,11 +164,11 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Add a new style inside the document and refresh the style cache.
 		/// </summary>
-		internal void AddStyle(String name, Style style)
+		internal void AddStyle(String name, OxW.Style style)
 		{
 			knownStyles[name] = style;
 			if (mainPart.StyleDefinitionsPart == null)
-				mainPart.AddNewPart<StyleDefinitionsPart>().Styles = new Styles();
+				mainPart.AddNewPart<OxP.StyleDefinitionsPart>().Styles = new OxW.Styles();
 			mainPart.StyleDefinitionsPart.Styles.Append(style);
 		}
 
@@ -179,12 +179,12 @@ namespace HtmlToOpenXml
         /// <summary>
         /// Try to insert the style in the document if it is a known style.
         /// </summary>
-        private bool EnsureKnownStyle(string styleName, out Style style)
+		private bool EnsureKnownStyle(string styleName, out OxW.Style style)
         {
 			style = null;
 			string xml = PredefinedStyles.GetOuterXml(styleName);
 			if (xml == null) return false;
-			this.AddStyle(styleName, style = new Style(xml));
+			this.AddStyle(styleName, style = new OxW.Style(xml));
 			return true;
         }
 

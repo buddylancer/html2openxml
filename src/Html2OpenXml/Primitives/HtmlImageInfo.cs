@@ -9,7 +9,6 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
  * PARTICULAR PURPOSE.
  */
-using DocumentFormat.OpenXml.Packaging;
 
 namespace HtmlToOpenXml
 {

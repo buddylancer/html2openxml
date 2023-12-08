@@ -14,8 +14,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+using OxP = DocumentFormat.OpenXml.Packaging;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml
 {
@@ -23,7 +23,7 @@ namespace HtmlToOpenXml
 	{
 		public const string HEADING_NUMBERING_NAME = "decimal-heading-multi";
 
-		private MainDocumentPart mainPart;
+		private OxP.MainDocumentPart mainPart;
 		private int nextInstanceID, levelDepth;
         private int maxlevelDepth = 0;
         private bool firstItem;
@@ -32,7 +32,7 @@ namespace HtmlToOpenXml
         private Stack<string[]> listHtmlElementClasses;
 		private int headingNumberingId;
 
-		public NumberingListStyleCollection(MainDocumentPart mainPart)
+		public NumberingListStyleCollection(OxP.MainDocumentPart mainPart)
 		{
 			this.mainPart = mainPart;
 			this.numInstances = new Stack<KeyValuePair<Int32, int>>();
@@ -45,23 +45,23 @@ namespace HtmlToOpenXml
 
 		private void InitNumberingIds()
 		{
-			NumberingDefinitionsPart numberingPart = mainPart.NumberingDefinitionsPart;
+			OxP.NumberingDefinitionsPart numberingPart = mainPart.NumberingDefinitionsPart;
 			int absNumIdRef = 0;
 
 			// Ensure the numbering.xml file exists or any numbering or bullets list will results
 			// in simple numbering list (1.   2.   3...)
 			if (numberingPart == null)
-				numberingPart = numberingPart = mainPart.AddNewPart<NumberingDefinitionsPart>();
+				numberingPart = numberingPart = mainPart.AddNewPart<OxP.NumberingDefinitionsPart>();
 
 			if (mainPart.NumberingDefinitionsPart.Numbering == null)
 			{
-				new Numbering().Save(numberingPart);
+				new OxW.Numbering().Save(numberingPart);
 			}
 			else
 			{
 				// The absNumIdRef Id is a required field and should be unique. We will loop through the existing Numbering definition
 				// to retrieve the highest Id and reconstruct our own list definition template.
-				foreach (var abs in numberingPart.Numbering.Elements<AbstractNum>())
+				foreach (var abs in numberingPart.Numbering.Elements<OxW.AbstractNum>())
 				{
 					if (abs.AbstractNumberId.HasValue && abs.AbstractNumberId > absNumIdRef)
 						absNumIdRef = abs.AbstractNumberId;
@@ -72,112 +72,112 @@ namespace HtmlToOpenXml
 			// This minimal numbering definition has been inspired by the documentation OfficeXMLMarkupExplained_en.docx
 			// http://www.microsoft.com/downloads/details.aspx?FamilyID=6f264d0b-23e8-43fe-9f82-9ab627e5eaa3&displaylang=en
 
-			AbstractNum[] absNumChildren = new [] {
+			OxW.AbstractNum[] absNumChildren = new [] {
 				//8 kinds of abstractnum + 1 multi-level.
-				new AbstractNum(
-					new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-					new Level {
-						StartNumberingValue = new StartNumberingValue() { Val = 1 },
-						NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.Decimal },
+				new OxW.AbstractNum(
+					new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+					new OxW.Level {
+						StartNumberingValue = new OxW.StartNumberingValue() { Val = 1 },
+						NumberingFormat = new OxW.NumberingFormat() { Val = OxW.NumberFormatValues.Decimal },
 						LevelIndex = 0,
-						LevelText = new LevelText() { Val = "%1." },
-						PreviousParagraphProperties = new PreviousParagraphProperties {
-							Indentation = new Indentation() { Left = "420", Hanging = "360" }
+						LevelText = new OxW.LevelText() { Val = "%1." },
+						PreviousParagraphProperties = new OxW.PreviousParagraphProperties {
+							Indentation = new OxW.Indentation() { Left = "420", Hanging = "360" }
 						}
 					}
-				) { AbstractNumberId = absNumIdRef, AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = "decimal" } },
-				new AbstractNum(
-					new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-					new Level {
-						NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.Bullet },
+				) { AbstractNumberId = absNumIdRef, AbstractNumDefinitionName = new OxW.AbstractNumDefinitionName() { Val = "decimal" } },
+				new OxW.AbstractNum(
+					new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+					new OxW.Level {
+						NumberingFormat = new OxW.NumberingFormat() { Val = OxW.NumberFormatValues.Bullet },
 						LevelIndex = 0,
-						LevelText = new LevelText() { Val = "•" },
-						PreviousParagraphProperties = new PreviousParagraphProperties {
-							Indentation = new Indentation() { Left = "420", Hanging = "360" }
+						LevelText = new OxW.LevelText() { Val = "•" },
+						PreviousParagraphProperties = new OxW.PreviousParagraphProperties {
+							Indentation = new OxW.Indentation() { Left = "420", Hanging = "360" }
 						}
 					}
-				) { AbstractNumberId = absNumIdRef + 1, AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = "disc" } },
-				new AbstractNum(
-					new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-					new Level {
-						NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.Bullet },
+				) { AbstractNumberId = absNumIdRef + 1, AbstractNumDefinitionName = new OxW.AbstractNumDefinitionName() { Val = "disc" } },
+				new OxW.AbstractNum(
+					new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+					new OxW.Level {
+						NumberingFormat = new OxW.NumberingFormat() { Val = OxW.NumberFormatValues.Bullet },
 						LevelIndex = 0,
-						LevelText = new LevelText() { Val = "▪" },
-						PreviousParagraphProperties = new PreviousParagraphProperties {
-							Indentation = new Indentation() { Left = "420", Hanging = "360" }
+						LevelText = new OxW.LevelText() { Val = "▪" },
+						PreviousParagraphProperties = new OxW.PreviousParagraphProperties {
+							Indentation = new OxW.Indentation() { Left = "420", Hanging = "360" }
 						}
 					}
-				) { AbstractNumberId = absNumIdRef + 2, AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = "square" } },
-				new AbstractNum(
-					new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-					new Level {
-						NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.Bullet },
+				) { AbstractNumberId = absNumIdRef + 2, AbstractNumDefinitionName = new OxW.AbstractNumDefinitionName() { Val = "square" } },
+				new OxW.AbstractNum(
+					new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+					new OxW.Level {
+						NumberingFormat = new OxW.NumberingFormat() { Val = OxW.NumberFormatValues.Bullet },
 						LevelIndex = 0,
-						LevelText = new LevelText() { Val = "o" },
-						PreviousParagraphProperties = new PreviousParagraphProperties {
-							Indentation = new Indentation() { Left = "420", Hanging = "360" }
+						LevelText = new OxW.LevelText() { Val = "o" },
+						PreviousParagraphProperties = new OxW.PreviousParagraphProperties {
+							Indentation = new OxW.Indentation() { Left = "420", Hanging = "360" }
 						}
 					}
-				) { AbstractNumberId = absNumIdRef + 3, AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = "circle" } },
-				new AbstractNum(
-					new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-					new Level {
-						StartNumberingValue = new StartNumberingValue() { Val = 1 },
-						NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.UpperLetter },
+				) { AbstractNumberId = absNumIdRef + 3, AbstractNumDefinitionName = new OxW.AbstractNumDefinitionName() { Val = "circle" } },
+				new OxW.AbstractNum(
+					new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+					new OxW.Level {
+						StartNumberingValue = new OxW.StartNumberingValue() { Val = 1 },
+						NumberingFormat = new OxW.NumberingFormat() { Val = OxW.NumberFormatValues.UpperLetter },
 						LevelIndex = 0,
-						LevelText = new LevelText() { Val = "%1." },
-						PreviousParagraphProperties = new PreviousParagraphProperties {
-							Indentation = new Indentation() { Left = "420", Hanging = "360" }
+						LevelText = new OxW.LevelText() { Val = "%1." },
+						PreviousParagraphProperties = new OxW.PreviousParagraphProperties {
+							Indentation = new OxW.Indentation() { Left = "420", Hanging = "360" }
 						}
 					}
-				) { AbstractNumberId = absNumIdRef + 4, AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = "upper-alpha" } },
-				new AbstractNum(
-					new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-					new Level {
-						StartNumberingValue = new StartNumberingValue() { Val = 1 },
-						NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.LowerLetter },
+				) { AbstractNumberId = absNumIdRef + 4, AbstractNumDefinitionName = new OxW.AbstractNumDefinitionName() { Val = "upper-alpha" } },
+				new OxW.AbstractNum(
+					new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+					new OxW.Level {
+						StartNumberingValue = new OxW.StartNumberingValue() { Val = 1 },
+						NumberingFormat = new OxW.NumberingFormat() { Val = OxW.NumberFormatValues.LowerLetter },
 						LevelIndex = 0,
-						LevelText = new LevelText() { Val = "%1." },
-						PreviousParagraphProperties = new PreviousParagraphProperties {
-							Indentation = new Indentation() { Left = "420", Hanging = "360" }
+						LevelText = new OxW.LevelText() { Val = "%1." },
+						PreviousParagraphProperties = new OxW.PreviousParagraphProperties {
+							Indentation = new OxW.Indentation() { Left = "420", Hanging = "360" }
 						}
 					}
-				) { AbstractNumberId = absNumIdRef + 5, AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = "lower-alpha" } },
-				new AbstractNum(
-					new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-					new Level {
-						StartNumberingValue = new StartNumberingValue() { Val = 1 },
-						NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.UpperRoman },
+				) { AbstractNumberId = absNumIdRef + 5, AbstractNumDefinitionName = new OxW.AbstractNumDefinitionName() { Val = "lower-alpha" } },
+				new OxW.AbstractNum(
+					new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+					new OxW.Level {
+						StartNumberingValue = new OxW.StartNumberingValue() { Val = 1 },
+						NumberingFormat = new OxW.NumberingFormat() { Val = OxW.NumberFormatValues.UpperRoman },
 						LevelIndex = 0,
-						LevelText = new LevelText() { Val = "%1." },
-						PreviousParagraphProperties = new PreviousParagraphProperties {
-							Indentation = new Indentation() { Left = "420", Hanging = "360" }
+						LevelText = new OxW.LevelText() { Val = "%1." },
+						PreviousParagraphProperties = new OxW.PreviousParagraphProperties {
+							Indentation = new OxW.Indentation() { Left = "420", Hanging = "360" }
 						}
 					}
-				) { AbstractNumberId = absNumIdRef + 6, AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = "upper-roman" } },
-				new AbstractNum(
-					new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-					new Level {
-						StartNumberingValue = new StartNumberingValue() { Val = 1 },
-						NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.LowerRoman },
+				) { AbstractNumberId = absNumIdRef + 6, AbstractNumDefinitionName = new OxW.AbstractNumDefinitionName() { Val = "upper-roman" } },
+				new OxW.AbstractNum(
+					new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+					new OxW.Level {
+						StartNumberingValue = new OxW.StartNumberingValue() { Val = 1 },
+						NumberingFormat = new OxW.NumberingFormat() { Val = OxW.NumberFormatValues.LowerRoman },
 						LevelIndex = 0,
-						LevelText = new LevelText() { Val = "%1." },
-						PreviousParagraphProperties = new PreviousParagraphProperties {
-							Indentation = new Indentation() { Left = "420", Hanging = "360" }
+						LevelText = new OxW.LevelText() { Val = "%1." },
+						PreviousParagraphProperties = new OxW.PreviousParagraphProperties {
+							Indentation = new OxW.Indentation() { Left = "420", Hanging = "360" }
 						}
 					}
-				) { AbstractNumberId = absNumIdRef + 7, AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = "lower-roman" } },
+				) { AbstractNumberId = absNumIdRef + 7, AbstractNumDefinitionName = new OxW.AbstractNumDefinitionName() { Val = "lower-roman" } },
 				// decimal-heading-multi
 				// WARNING: only use this for headings
-				new AbstractNum(
-					new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-					new Level {
-						StartNumberingValue = new StartNumberingValue() { Val = 1 },
-						NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.Decimal },
+				new OxW.AbstractNum(
+					new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+					new OxW.Level {
+						StartNumberingValue = new OxW.StartNumberingValue() { Val = 1 },
+						NumberingFormat = new OxW.NumberingFormat() { Val = OxW.NumberFormatValues.Decimal },
 						LevelIndex = 0,
-						LevelText = new LevelText() { Val = "%1." }
+						LevelText = new OxW.LevelText() { Val = "%1." }
 					}
-				) { AbstractNumberId = absNumIdRef + 8, AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = HEADING_NUMBERING_NAME } }
+				) { AbstractNumberId = absNumIdRef + 8, AbstractNumDefinitionName = new OxW.AbstractNumDefinitionName() { Val = HEADING_NUMBERING_NAME } }
 			};
 
 			// Check if we have already initialized our abstract nums
@@ -185,7 +185,7 @@ namespace HtmlToOpenXml
 			// This supports a use-case where the HtmlConverter is called multiple times
 			// on document generation, and needs to continue existing lists
 			bool addNewAbstractNums = false;
-			IEnumerable<AbstractNum> existingAbstractNums = numberingPart.Numbering.ChildElements.Where(e => e != null && e is AbstractNum).Cast<AbstractNum>();
+			IEnumerable<OxW.AbstractNum> existingAbstractNums = numberingPart.Numbering.ChildElements.Where(e => e != null && e is OxW.AbstractNum).Cast<OxW.AbstractNum>();
 
 			if (existingAbstractNums.Count() >= absNumChildren.Length) // means we might have added our own already
 			{
@@ -210,7 +210,7 @@ namespace HtmlToOpenXml
 					lastAbsNumIndex = numberingPart.Numbering.ChildElements.Count-1;
 					for (; lastAbsNumIndex >= 0; lastAbsNumIndex--)
 					{
-						if(numberingPart.Numbering.ChildElements[lastAbsNumIndex] is AbstractNum)
+						if (numberingPart.Numbering.ChildElements[lastAbsNumIndex] is OxW.AbstractNum)
 							break;
 					}
 				}
@@ -233,7 +233,7 @@ namespace HtmlToOpenXml
 			// at this level of the style hierarchy. While processing this markup, if the w:val='0',
 			// the paragraph does not have a list item (http://msdn.microsoft.com/en-us/library/ee922775(office.14).aspx)
 			nextInstanceID = 1;
-			foreach (NumberingInstance inst in numberingPart.Numbering.Elements<NumberingInstance>())
+			foreach (OxW.NumberingInstance inst in numberingPart.Numbering.Elements<OxW.NumberingInstance>())
 			{
 				if (inst.NumberID.Value > nextInstanceID) nextInstanceID = inst.NumberID;
 			}
@@ -290,8 +290,8 @@ namespace HtmlToOpenXml
 			{
 				int absNumberId = GetAbsNumIdFromType(HEADING_NUMBERING_NAME, true);
 
-				NumberingInstance existingTitleNumbering = mainPart.NumberingDefinitionsPart.Numbering
-					.Elements<NumberingInstance>()
+				OxW.NumberingInstance existingTitleNumbering = mainPart.NumberingDefinitionsPart.Numbering
+					.Elements<OxW.NumberingInstance>()
 					.FirstOrDefault(n => n != null && n.AbstractNumId.Val == absNumberId);
 				
 				if (existingTitleNumbering != null)
@@ -306,12 +306,12 @@ namespace HtmlToOpenXml
 			return headingNumberingId;
 		}
 
-		public void ApplyNumberingToHeadingParagraph(Paragraph p, int indentLevel)
+		public void ApplyNumberingToHeadingParagraph(OxW.Paragraph p, int indentLevel)
 		{
 			// Apply numbering to paragraph
-			p.InsertInProperties(prop => prop.NumberingProperties = new NumberingProperties(
-				new NumberingLevelReference(){ Val = (indentLevel - 1) }, // indenting starts at 0
-				new NumberingId(){ Val = GetHeadingNumberingId() }
+			p.InsertInProperties(prop => prop.NumberingProperties = new OxW.NumberingProperties(
+				new OxW.NumberingLevelReference() { Val = (indentLevel - 1) }, // indenting starts at 0
+				new OxW.NumberingId() { Val = GetHeadingNumberingId() }
 			));
 
 			// Make sure we reset everything for upcoming lists
@@ -349,13 +349,13 @@ namespace HtmlToOpenXml
                 if (orderedList || (levelDepth >= maxlevelDepth))
                 {
                     currentInstanceId = ++nextInstanceID;
-                    Numbering numbering = mainPart.NumberingDefinitionsPart.Numbering;
+					OxW.Numbering numbering = mainPart.NumberingDefinitionsPart.Numbering;
 
                     numbering.Append(
-                        new NumberingInstance(
-                            new AbstractNumId() { Val = absNumId },
-							new LevelOverride(
-								new StartOverrideNumberingValue() { Val = 1 }
+						new OxW.NumberingInstance(
+							new OxW.AbstractNumId() { Val = absNumId },
+							new OxW.LevelOverride(
+								new OxW.StartOverrideNumberingValue() { Val = 1 }
 							)
 							{ LevelIndex = 0 }
                         )
@@ -402,28 +402,28 @@ namespace HtmlToOpenXml
 			Margin margin = en.StyleAttributes.GetAsMargin("margin");
 			if (margin.Left.Value > 0 && margin.Left.Type == UnitMetric.Pixel)
 			{
-				Numbering numbering = mainPart.NumberingDefinitionsPart.Numbering;
-				foreach (AbstractNum absNum in numbering.Elements<AbstractNum>())
+				OxW.Numbering numbering = mainPart.NumberingDefinitionsPart.Numbering;
+				foreach (OxW.AbstractNum absNum in numbering.Elements<OxW.AbstractNum>())
 				{
 					if (absNum.AbstractNumberId == numInstances.Peek().Value)
 					{
-						Level lvl = absNum.GetFirstChild<Level>();
+						OxW.Level lvl = absNum.GetFirstChild<OxW.Level>();
 						Int32 currentNumId = ++nextInstanceID;
 
 						numbering.Append(
-							new AbstractNum(
-									new MultiLevelType() { Val = MultiLevelValues.SingleLevel },
-									new Level {
-										StartNumberingValue = new StartNumberingValue() { Val = 1 },
-										NumberingFormat = new NumberingFormat() { Val = lvl.NumberingFormat.Val },
+							new OxW.AbstractNum(
+									new OxW.MultiLevelType() { Val = OxW.MultiLevelValues.SingleLevel },
+									new OxW.Level {
+										StartNumberingValue = new OxW.StartNumberingValue() { Val = 1 },
+										NumberingFormat = new OxW.NumberingFormat() { Val = lvl.NumberingFormat.Val },
 										LevelIndex = 0,
-										LevelText = new LevelText() { Val = lvl.LevelText.Val }
+										LevelText = new OxW.LevelText() { Val = lvl.LevelText.Val }
 									}
 								) { AbstractNumberId = currentNumId });
 						numbering.Save(mainPart.NumberingDefinitionsPart);
 						numbering.Append(
-							new NumberingInstance(
-									new AbstractNumId() { Val = currentNumId }
+							new OxW.NumberingInstance(
+									new OxW.AbstractNumId() { Val = currentNumId }
 								) { NumberID = currentNumId });
 						numbering.Save(mainPart.NumberingDefinitionsPart);
 						mainPart.NumberingDefinitionsPart.Numbering.Reload();
@@ -444,19 +444,19 @@ namespace HtmlToOpenXml
 		/// </summary>
 		private void EnsureMultilevel(int absNumId, bool cascading = false)
 		{
-			AbstractNum absNumMultilevel = mainPart.NumberingDefinitionsPart.Numbering.Elements<AbstractNum>().SingleOrDefault(a => a.AbstractNumberId.Value == absNumId);
+			OxW.AbstractNum absNumMultilevel = mainPart.NumberingDefinitionsPart.Numbering.Elements<OxW.AbstractNum>().SingleOrDefault(a => a.AbstractNumberId.Value == absNumId);
 
-			if (absNumMultilevel != null && absNumMultilevel.MultiLevelType.Val == MultiLevelValues.SingleLevel)
+			if (absNumMultilevel != null && absNumMultilevel.MultiLevelType.Val == OxW.MultiLevelValues.SingleLevel)
 			{
-				Level level1 = absNumMultilevel.GetFirstChild<Level>();
-				absNumMultilevel.MultiLevelType.Val = MultiLevelValues.Multilevel;
+				OxW.Level level1 = absNumMultilevel.GetFirstChild<OxW.Level>();
+				absNumMultilevel.MultiLevelType.Val = OxW.MultiLevelValues.Multilevel;
 
 				// skip the first level, starts to 2
 				for (int i = 2; i < 10; i++)
 				{
-					Level level = new Level {
-						StartNumberingValue = new StartNumberingValue() { Val = 1 },
-						NumberingFormat = new NumberingFormat() { Val = level1.NumberingFormat.Val },
+					OxW.Level level = new OxW.Level {
+						StartNumberingValue = new OxW.StartNumberingValue() { Val = 1 },
+						NumberingFormat = new OxW.NumberingFormat() { Val = level1.NumberingFormat.Val },
 						LevelIndex = i - 1
 					};
 
@@ -469,12 +469,12 @@ namespace HtmlToOpenXml
 						for (int lvlIndex = 1; lvlIndex <= i; lvlIndex++)
 							lvlText.AppendFormat("%{0}.", lvlIndex);
 
-						level.LevelText = new LevelText() { Val = lvlText.ToString() };
+						level.LevelText = new OxW.LevelText() { Val = lvlText.ToString() };
 					} else {
-						level.LevelText = new LevelText() { Val = "%" + i + "." };
+						level.LevelText = new OxW.LevelText() { Val = "%" + i + "." };
 						level.PreviousParagraphProperties = 
-							new PreviousParagraphProperties {
-								Indentation = new Indentation() { Left = (720 * i).ToString(CultureInfo.InvariantCulture), Hanging = "360" }
+							new OxW.PreviousParagraphProperties {
+								Indentation = new OxW.Indentation() { Left = (720 * i).ToString(CultureInfo.InvariantCulture), Hanging = "360" }
 							};
 					}
 

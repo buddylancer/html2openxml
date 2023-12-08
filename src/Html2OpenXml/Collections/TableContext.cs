@@ -11,7 +11,7 @@
  */
 using System;
 using System.Collections.Generic;
-using DocumentFormat.OpenXml.Wordprocessing;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml
 {
@@ -22,7 +22,7 @@ namespace HtmlToOpenXml
 	{
 		sealed class Tuple
 		{
-			public Table Table;
+			public OxW.Table Table;
 			public CellPosition CellPosition;
             public HtmlTableSpanCollection RowSpan;
 		}
@@ -39,7 +39,7 @@ namespace HtmlToOpenXml
 			return x.Column.CompareTo(y.Column);
 		}
 
-		public void NewContext(Table table)
+		public void NewContext(OxW.Table table)
 		{
 			if (this.current != null)
 				tables.Push(current);
@@ -85,7 +85,7 @@ namespace HtmlToOpenXml
 			get { return current.RowSpan; }
 		}
 
-		public Table CurrentTable
+		public OxW.Table CurrentTable
 		{
 			get { return current.Table; }
 		}

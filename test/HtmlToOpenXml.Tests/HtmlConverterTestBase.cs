@@ -1,6 +1,6 @@
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox =DocumentFormat.OpenXml;
+using OxP =DocumentFormat.OpenXml.Packaging;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 using NUnit.Framework;
 
 namespace HtmlToOpenXml.Tests
@@ -8,23 +8,23 @@ namespace HtmlToOpenXml.Tests
     public abstract class HtmlConverterTestBase
     {
         private System.IO.MemoryStream generatedDocument;
-        private WordprocessingDocument package;
+		private OxP.WordprocessingDocument package;
 
         protected HtmlConverter converter;
-        protected MainDocumentPart mainPart;
+		protected OxP.MainDocumentPart mainPart;
 
 
         [SetUp]
         public void Init ()
         {
             generatedDocument = new System.IO.MemoryStream();
-            package = WordprocessingDocument.Create(generatedDocument, WordprocessingDocumentType.Document);
+			package = OxP.WordprocessingDocument.Create(generatedDocument, Ox.WordprocessingDocumentType.Document);
 
             mainPart = package.MainDocumentPart;
             if (mainPart == null)
             {
                 mainPart = package.AddMainDocumentPart();
-                new Document(new Body()).Save(mainPart);
+				new OxW.Document(new OxW.Body()).Save(mainPart);
             }
 
             this.converter = new HtmlConverter(mainPart);

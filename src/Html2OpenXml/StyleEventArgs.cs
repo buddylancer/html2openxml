@@ -10,8 +10,8 @@
  * PARTICULAR PURPOSE.
  */
 using System;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+using OxP = DocumentFormat.OpenXml.Packaging;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace HtmlToOpenXml
 {
@@ -20,7 +20,7 @@ namespace HtmlToOpenXml
 	/// </summary>
 	public class StyleEventArgs : EventArgs
 	{
-		internal StyleEventArgs(String styleId, MainDocumentPart mainPart, StyleValues type)
+		internal StyleEventArgs(String styleId, OxP.MainDocumentPart mainPart, OxW.StyleValues type)
 		{
 			this.Name = styleId;
 			this.StyleDefinitionsPart = mainPart.StyleDefinitionsPart;
@@ -35,11 +35,11 @@ namespace HtmlToOpenXml
 		/// <summary>
 		/// Gets the styles definition part located inside MainDocumentPart.
 		/// </summary>
-		public StyleDefinitionsPart StyleDefinitionsPart { get; private set; }
+		public OxP.StyleDefinitionsPart StyleDefinitionsPart { get; private set; }
 
 		/// <summary>
 		/// Gets the type of style seeked (character or paragraph).
 		/// </summary>
-		public StyleValues Type { get; private set; }
+		public OxW.StyleValues Type { get; private set; }
 	}
 }

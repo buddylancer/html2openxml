@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.IO;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Validation;
-using DocumentFormat.OpenXml.Wordprocessing;
+using Ox = DocumentFormat.OpenXml;
+using OxP = DocumentFormat.OpenXml.Packaging;
+using OxV = DocumentFormat.OpenXml.Validation;
+using OxW = DocumentFormat.OpenXml.Wordprocessing;
 using HtmlToOpenXml;
 
 namespace Demo
@@ -27,18 +27,18 @@ namespace Demo
                 }
 
                 generatedDocument.Position = 0L;
-                using (WordprocessingDocument package = WordprocessingDocument.Open(generatedDocument, true))
+				using (OxP.WordprocessingDocument package = OxP.WordprocessingDocument.Open(generatedDocument, true))
                 //using (WordprocessingDocument package = WordprocessingDocument.Create(generatedDocument, WordprocessingDocumentType.Document))
                 {
-                    MainDocumentPart mainPart = package.MainDocumentPart;
+					OxP.MainDocumentPart mainPart = package.MainDocumentPart;
                     if (mainPart == null)
                     {
                         mainPart = package.AddMainDocumentPart();
-                        new Document(new Body()).Save(mainPart);
+						new OxW.Document(new OxW.Body()).Save(mainPart);
                     }
 
                     HtmlConverter converter = new HtmlConverter(mainPart);
-                    Body body = mainPart.Document.Body;
+					OxW.Body body = mainPart.Document.Body;
 
                     converter.ParseHtml(html);
                     mainPart.Document.Save();
@@ -52,9 +52,9 @@ namespace Demo
             System.Diagnostics.Process.Start(filename);
         }
 
-        static void AssertThatOpenXmlDocumentIsValid(WordprocessingDocument wpDoc)
+        static void AssertThatOpenXmlDocumentIsValid(OxP.WordprocessingDocument wpDoc)
         {
-            var validator = new OpenXmlValidator(FileFormatVersions.Office2010);
+            var validator = new OxV.OpenXmlValidator(Ox.FileFormatVersions.Office2010);
             var errors = validator.Validate(wpDoc);
 
             if (!errors.GetEnumerator().MoveNext())
@@ -64,7 +64,7 @@ namespace Demo
             Console.WriteLine("The document doesn't look 100% compatible with Office 2010.\n");
 
             Console.ForegroundColor = ConsoleColor.Gray;
-            foreach (ValidationErrorInfo error in errors)
+            foreach (OxV.ValidationErrorInfo error in errors)
             {
                 Console.Write("{0}\n\t{1}", error.Path.XPath, error.Description);
                 Console.WriteLine();
